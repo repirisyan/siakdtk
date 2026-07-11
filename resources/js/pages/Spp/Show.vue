@@ -129,11 +129,11 @@ const verifyPayment = (payment: Payment, action: 'approve' | 'reject') => {
 </script>
 
 <template>
-    <Head :title="`Detail SPP - ${spp.siswa.nama}`" />
+    <Head :title="`Detail Pembayaran - ${spp.siswa.nama}`" />
     <div class="space-y-6 bg-background p-4 text-foreground">
         <div class="flex items-center justify-between gap-4">
             <div>
-                <h1 class="text-2xl font-bold">Detail SPP</h1>
+                <h1 class="text-2xl font-bold">Detail Pembayaran</h1>
                 <p class="text-sm text-muted-foreground">
                     Tagihan dan riwayat pembayaran cicilan siswa.
                 </p>

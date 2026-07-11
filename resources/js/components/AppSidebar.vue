@@ -140,7 +140,7 @@ const menus: SidebarMenuItem[] = [
         roles: ['Kepsek'],
     },
     {
-        title: 'Kelola SPP',
+        title: 'Kelola Pembayaran',
         href: sppIndex(),
         icon: Wallet,
         roles: ['Admin', 'Staff Administrasi', 'Kepsek'],

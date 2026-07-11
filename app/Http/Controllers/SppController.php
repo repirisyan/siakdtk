@@ -217,7 +217,7 @@ class SppController extends Controller
 
         $this->queueNotifications(collect([$spp->id]), $sender, 'single');
 
-        return redirect()->route('spp.index')->with('success', 'Notifikasi SPP berhasil dimasukkan ke antrean pengiriman.');
+        return redirect()->route('spp.index')->with('success', 'Notifikasi pembayaran berhasil dimasukkan ke antrean pengiriman.');
     }
 
     public function sendNotifications(SendSppNotificationRequest $request)
@@ -298,7 +298,7 @@ class SppController extends Controller
             'filters' => $filters ?: null,
             'sent_at' => now(),
         ]);
-        $batch = Bus::batch($jobs)->name('Notifikasi Tagihan SPP')->dispatch();
+        $batch = Bus::batch($jobs)->name('Notifikasi Tagihan Pembayaran')->dispatch();
         $log->update(['batch_id' => $batch->id]);
 
         return count($jobs);

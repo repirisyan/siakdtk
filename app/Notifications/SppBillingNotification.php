@@ -24,16 +24,16 @@ class SppBillingNotification extends Notification
         $sisa = max((float) $this->spp->nominal - $this->totalPaid, 0);
         $rupiah = fn (float $value) => 'Rp'.number_format($value, 0, ',', '.');
         $status = $sisa <= 0 ? 'Lunas' : 'Belum Lunas';
-        $subject = 'Tagihan SPP Anak Anda';
+        $subject = 'Tagihan Pembayaran Anak Anda';
 
         return (new MailMessage)
             ->subject($subject)
             ->view('mail.school.notification', [
                 'subject' => $subject,
                 'preheader' => "Tagihan {$this->spp->jenis_pembayaran} untuk {$siswa->nama} tersedia.",
-                'heading' => 'Tagihan SPP Anak Anda',
+                'heading' => 'Tagihan Pembayaran Anak Anda',
                 'recipientName' => $notifiable->name,
-                'lines' => ['Tagihan SPP anak Anda telah tersedia. Silakan periksa detail dan lakukan pembayaran sebelum jatuh tempo.'],
+                'lines' => ['Tagihan pembayaran anak Anda telah tersedia. Silakan periksa detail dan lakukan pembayaran sebelum jatuh tempo.'],
                 'actionText' => 'Lihat Tagihan',
                 'actionUrl' => route('tagihan-saya.show', $this->spp),
                 'details' => [

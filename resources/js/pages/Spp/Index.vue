@@ -232,20 +232,20 @@ const table = useVueTable({
 </script>
 
 <template>
-    <Head title="Kelola SPP" />
+    <Head title="Kelola Pembayaran" />
     <div class="space-y-4 bg-background p-4 text-foreground">
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-bold">Kelola SPP</h1>
+                <h1 class="text-2xl font-bold">Kelola Pembayaran</h1>
                 <p class="text-sm text-muted-foreground">
                     Kelola tagihan dan riwayat pembayaran cicilan siswa.
                 </p>
             </div>
             <div v-if="canManageSpp" class="flex gap-2">
                 <Button variant="outline" @click="openGenerate"
-                    >Generate SPP</Button
+                    >Generate Pembayaran</Button
                 ><Button @click="router.visit(SppController.create().url)"
-                    >Tambah SPP</Button
+                    >Tambah Pembayaran</Button
                 >
             </div>
         </div>
@@ -318,7 +318,7 @@ const table = useVueTable({
                 variant="outline"
                 :disabled="!selectedSppIds.length"
                 @click="sendSelectedNotifications"
-                >Kirim Notifikasi SPP</Button
+                >Kirim Notifikasi Pembayaran</Button
             >
             <Button
                 variant="outline"

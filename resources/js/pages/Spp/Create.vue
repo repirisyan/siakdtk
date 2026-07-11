@@ -28,12 +28,12 @@ const submit = () => form.post(SppController.store().url);
 </script>
 
 <template>
-    <Head title="Tambah SPP" />
+    <Head title="Tambah Pembayaran" />
     <div class="max-w-2xl space-y-6 p-4">
         <div>
-            <h1 class="text-2xl font-bold">Tambah SPP</h1>
+            <h1 class="text-2xl font-bold">Tambah Pembayaran</h1>
             <p class="text-sm text-muted-foreground">
-                Buat tagihan SPP baru untuk siswa.
+                Buat tagihan pembayaran baru untuk siswa.
             </p>
         </div>
         <div

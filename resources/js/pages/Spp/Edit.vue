@@ -48,12 +48,12 @@ const submit = () => form.put(SppController.update(spp.value.id).url);
 </script>
 
 <template>
-    <Head :title="`Edit SPP - ${spp.thn_ajaran}`" />
+    <Head :title="`Edit Pembayaran - ${spp.thn_ajaran}`" />
     <div class="max-w-2xl space-y-6 p-4">
         <div>
-            <h1 class="text-2xl font-bold">Edit SPP</h1>
+            <h1 class="text-2xl font-bold">Edit Pembayaran</h1>
             <p class="text-sm text-muted-foreground">
-                Perbarui tagihan SPP siswa.
+                Perbarui tagihan pembayaran siswa.
             </p>
         </div>
         <div
