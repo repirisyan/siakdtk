@@ -29,6 +29,7 @@ class UserController extends Controller
             'guru:id,user_id,nama,nip',
             'siswa:id,user_id,nama,nis',
         ])
+            ->where('role_id', '!=', '4')->where('role_id', '!=', '6')
             ->withCount('siswas')
             ->when($search, function ($query, $search) {
                 $query->where(function ($query) use ($search) {
@@ -70,7 +71,6 @@ class UserController extends Controller
     public function create()
     {
         $this->authorizeAdmin();
-
         return Inertia::render('User/Create', [
             'roles' => $this->roles(),
         ]);
@@ -238,7 +238,7 @@ class UserController extends Controller
 
     private function roles()
     {
-        return Role::orderBy('role_name')->get(['id', 'role_name']);
+        return Role::orderBy('role_name')->where('role_name', '!=', 'Guru')->where('role_name', '!=', 'Orangtua Siswa')->get(['id', 'role_name']);
     }
 
     private function authorizeAdmin(): void
