@@ -1,0 +1,146 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Http\Requests\AbsenRequest;
+use App\Models\Absen;
+use App\Models\Jadwal;
+use App\Models\Kelas;
+use App\Models\Siswa;
+use App\Models\User;
+use Inertia\Inertia;
+
+class AbsenController extends Controller
+{
+    public function index()
+    {
+        $user = $this->currentAttendanceUser();
+        $kelasId = request()->query('kelas_id');
+        $jadwalId = request()->query('jadwal_id');
+
+        $kelas = $this->kelasForUser($user);
+        $jadwals = collect();
+        $siswas = collect();
+
+        if ($kelasId) {
+            abort_unless($kelas->contains('id', (int) $kelasId), 403);
+
+            $jadwals = $this->jadwalsForUser($user, (int) $kelasId);
+        }
+
+        if ($jadwalId) {
+            $jadwal = $this->authorizeJadwal($user, (int) $jadwalId);
+
+            abort_unless($jadwal->kelas_id === (int) $kelasId, 403);
+
+            $siswas = Siswa::with([
+                'absens' => function ($query) use ($jadwalId) {
+                    $query->where('jadwal_id', $jadwalId);
+                },
+            ])
+                ->where(['kelas_id' => $jadwal->kelas_id, 'status' => 'aktif'])
+                ->orderBy('nama')
+                ->get();
+        }
+
+        return Inertia::render('Absensi/Index', [
+            'kelas' => $kelas,
+            'jadwals' => $jadwals,
+            'siswas' => $siswas,
+            'filters' => [
+                'kelas_id' => $kelasId,
+                'jadwal_id' => $jadwalId,
+            ],
+        ]);
+    }
+
+    public function store(AbsenRequest $request)
+    {
+        $data = $request->validated();
+        $user = $this->currentAttendanceUser();
+        $jadwal = $this->authorizeJadwal($user, (int) $data['jadwal_id']);
+
+        abort_unless($jadwal->kelas_id === (int) $data['kelas_id'], 403);
+
+        $siswa = Siswa::findOrFail($data['siswa_id']);
+
+        abort_unless($siswa->kelas_id === $jadwal->kelas_id, 403);
+
+        $absen = Absen::firstOrCreate(
+            [
+                'siswa_id' => $siswa->id,
+                'jadwal_id' => $jadwal->id,
+            ],
+            [
+                'status' => $data['status'],
+                'keterangan' => $data['keterangan'],
+            ],
+        );
+
+        $message = $absen->wasRecentlyCreated
+            ? 'Absensi berhasil dicatat.'
+            : 'Absensi siswa sudah tercatat.';
+
+        return redirect()
+            ->route('absensi.index', [
+                'kelas_id' => $jadwal->kelas_id,
+                'jadwal_id' => $jadwal->id,
+            ])
+            ->with('success', $message);
+    }
+
+    private function kelasForUser(User $user)
+    {
+        return Kelas::query()
+            ->active()
+            ->when($user->hasRole('Guru'), function ($query) use ($user) {
+                $query->whereHas('jadwal', function ($query) use ($user) {
+                    $query->where('guru_id', $user->guru->id);
+                });
+            })
+            ->orderBy('nama_kelas')
+            ->get(['id', 'nama_kelas', 'thn_ajaran']);
+    }
+
+    private function jadwalsForUser(User $user, int $kelasId)
+    {
+        return Jadwal::with(['guru:id,nama,nip', 'tema:id,nama_tema'])
+            ->where('kelas_id', $kelasId)
+            ->when($user->hasRole('Guru'), function ($query) use ($user) {
+                $query->where('guru_id', $user->guru->id);
+            })
+            ->orderBy('tanggal')
+            ->orderBy('jam_mulai')
+            ->get(['id', 'kelas_id', 'guru_id', 'tema_id', 'tanggal', 'jam_mulai', 'jam_selesai']);
+    }
+
+    private function authorizeJadwal(User $user, int $jadwalId): Jadwal
+    {
+        $jadwal = Jadwal::with(['guru:id,nama,nip', 'kelas:id,nama_kelas,thn_ajaran', 'tema:id,nama_tema'])
+            ->findOrFail($jadwalId);
+
+        if ($user->hasRole('Guru')) {
+            abort_unless($jadwal->guru_id === $user->guru->id, 403);
+        }
+
+        return $jadwal;
+    }
+
+    private function currentAttendanceUser(): User
+    {
+        $user = auth()->user();
+
+        abort_unless($user instanceof User, 403);
+
+        $user->loadMissing(['role', 'guru']);
+
+        abort_unless(
+            $user->hasRole('Admin')
+                || $user->hasRole('Staff Akademik')
+                || ($user->hasRole('Guru') && $user->guru),
+            403,
+        );
+
+        return $user;
+    }
+}

@@ -1,0 +1,153 @@
+<script setup lang="ts">
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
+import { computed, watch } from 'vue';
+
+import SppController from '@/actions/App/Http/Controllers/SppController';
+import InputError from '@/components/InputError.vue';
+import Button from '@/components/ui/button/Button.vue';
+import Input from '@/components/ui/input/Input.vue';
+
+interface Siswa {
+    id: number;
+    nama: string;
+    nis: string | null;
+    kelas: { nama_kelas: string } | null;
+}
+interface Spp {
+    id: number;
+    siswa_id: number;
+    thn_ajaran: string;
+    jenis_pembayaran: string;
+    tanggal_tagihan: string;
+    jatuh_tempo: string;
+    nominal: string;
+    keterangan: string | null;
+}
+const page = usePage();
+const spp = computed(() => page.props.spp as Spp);
+const siswas = computed(() => page.props.siswas as Siswa[]);
+const form = useForm({
+    siswa_id: String(spp.value.siswa_id),
+    thn_ajaran: spp.value.thn_ajaran,
+    jenis_pembayaran: spp.value.jenis_pembayaran,
+    tanggal_tagihan: spp.value.tanggal_tagihan,
+    jatuh_tempo: spp.value.jatuh_tempo,
+    nominal: spp.value.nominal,
+    keterangan: spp.value.keterangan ?? '',
+});
+watch(spp, (value) => {
+    form.siswa_id = String(value.siswa_id);
+    form.thn_ajaran = value.thn_ajaran;
+    form.jenis_pembayaran = value.jenis_pembayaran;
+    form.tanggal_tagihan = value.tanggal_tagihan;
+    form.jatuh_tempo = value.jatuh_tempo;
+    form.nominal = value.nominal;
+    form.keterangan = value.keterangan ?? '';
+});
+const submit = () => form.put(SppController.update(spp.value.id).url);
+</script>
+
+<template>
+    <Head :title="`Edit SPP - ${spp.thn_ajaran}`" />
+    <div class="max-w-2xl space-y-6 p-4">
+        <div>
+            <h1 class="text-2xl font-bold">Edit SPP</h1>
+            <p class="text-sm text-muted-foreground">
+                Perbarui tagihan SPP siswa.
+            </p>
+        </div>
+        <div
+            class="rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm"
+        >
+            <form class="space-y-6" @submit.prevent="submit">
+                <div class="space-y-2">
+                    <label for="siswa_id" class="text-sm font-medium"
+                        >Siswa</label
+                    ><select
+                        id="siswa_id"
+                        v-model="form.siswa_id"
+                        class="h-9 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground"
+                    >
+                        <option value="">Pilih siswa</option>
+                        <option
+                            v-for="siswa in siswas"
+                            :key="siswa.id"
+                            :value="String(siswa.id)"
+                        >
+                            {{ siswa.nama }} · {{ siswa.nis ?? '-' }} ·
+                            {{ siswa.kelas?.nama_kelas ?? '-' }}
+                        </option></select
+                    ><InputError :message="form.errors.siswa_id" />
+                </div>
+                <div class="grid gap-6 md:grid-cols-2">
+                    <div class="space-y-2">
+                        <label for="thn_ajaran" class="text-sm font-medium"
+                            >Tahun Ajaran</label
+                        ><Input
+                            id="thn_ajaran"
+                            v-model="form.thn_ajaran"
+                        /><InputError :message="form.errors.thn_ajaran" />
+                    </div>
+                    <div class="space-y-2">
+                        <label
+                            for="jenis_pembayaran"
+                            class="text-sm font-medium"
+                            >Jenis Pembayaran</label
+                        ><Input
+                            id="jenis_pembayaran"
+                            v-model="form.jenis_pembayaran"
+                        /><InputError :message="form.errors.jenis_pembayaran" />
+                    </div>
+                    <div class="space-y-2">
+                        <label for="tanggal_tagihan" class="text-sm font-medium"
+                            >Tanggal Tagihan</label
+                        ><Input
+                            id="tanggal_tagihan"
+                            v-model="form.tanggal_tagihan"
+                            type="date"
+                        /><InputError :message="form.errors.tanggal_tagihan" />
+                    </div>
+                    <div class="space-y-2">
+                        <label for="jatuh_tempo" class="text-sm font-medium"
+                            >Jatuh Tempo</label
+                        ><Input
+                            id="jatuh_tempo"
+                            v-model="form.jatuh_tempo"
+                            type="date"
+                        /><InputError :message="form.errors.jatuh_tempo" />
+                    </div>
+                    <div class="space-y-2">
+                        <label for="nominal" class="text-sm font-medium"
+                            >Nominal Tagihan</label
+                        ><Input
+                            id="nominal"
+                            v-model="form.nominal"
+                            type="number"
+                            min="0"
+                            step="0.01"
+                        /><InputError :message="form.errors.nominal" />
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <label for="keterangan" class="text-sm font-medium"
+                        >Keterangan</label
+                    ><textarea
+                        id="keterangan"
+                        v-model="form.keterangan"
+                        class="min-h-28 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
+                    /><InputError :message="form.errors.keterangan" />
+                </div>
+                <div class="flex gap-2">
+                    <Button type="submit" :disabled="form.processing">{{
+                        form.processing ? 'Menyimpan...' : 'Simpan Perubahan'
+                    }}</Button
+                    ><Button as-child variant="outline"
+                        ><Link :href="SppController.index().url"
+                            >Batal</Link
+                        ></Button
+                    >
+                </div>
+            </form>
+        </div>
+    </div>
+</template>
