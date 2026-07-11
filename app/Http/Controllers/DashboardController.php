@@ -23,10 +23,10 @@ class DashboardController extends Controller
         $user = auth()->user();
         abort_unless($user instanceof User, 403);
         $user->loadMissing(['role', 'guru', 'siswas.kelas']);
-
         return Inertia::render('Dashboard', [
             'dashboard' => match (true) {
                 $user->hasRole('Guru') && $user->guru => $this->guruDashboard($user),
+                $user->hasRole('Guru') && $user->guru === null => true,
                 $user->hasRole('Orangtua Siswa') && $user->siswas->isNotEmpty() => $this->orangtuaDashboard($user),
                 default => $this->schoolDashboard($user),
             },
