@@ -4,16 +4,17 @@ namespace App\Jobs;
 
 use App\Models\Spp;
 use App\Notifications\SppBillingNotification;
+use Illuminate\Bus\Batchable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Notification;
-use Illuminate\Bus\Batchable;
+
 class SendSppBillingNotification implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels,Batchable;
+    use Batchable, Dispatchable, InteractsWithQueue, Queueable,SerializesModels;
 
     public int $tries = 3;
 

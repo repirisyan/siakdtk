@@ -9,6 +9,7 @@ use App\Models\Siswa;
 use App\Models\User;
 use App\Notifications\StudentRegistrationNotification;
 use App\Services\ProfilePhotoService;
+use App\Services\StudentDocumentService;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -21,12 +22,12 @@ class StudentRegistrationController extends Controller
         return $this->registrationPage(false);
     }
 
-    public function store(StudentRegistrationRequest $request, ProfilePhotoService $profilePhotoService)
+    public function store(StudentRegistrationRequest $request, ProfilePhotoService $profilePhotoService, StudentDocumentService $studentDocumentService)
     {
         $this->ensureRegistrationOpen();
         $data = $request->validated();
 
-        $user = DB::transaction(function () use ($data, $request, $profilePhotoService) {
+        $user = DB::transaction(function () use ($data, $request, $profilePhotoService, $studentDocumentService) {
             $roleOrangtua = Role::where('role_name', 'Orangtua Siswa')->firstOrFail();
 
             $user = User::create([
@@ -49,7 +50,11 @@ class StudentRegistrationController extends Controller
                     'password_confirmation',
                     'thn_ajaran',
                     'foto_profil',
+                    'akta_kelahiran_file',
+                    'kartu_keluarga_file',
                 ]),
+                'akta_kelahiran_file' => $studentDocumentService->store($request->file('akta_kelahiran_file')),
+                'kartu_keluarga_file' => $studentDocumentService->store($request->file('kartu_keluarga_file')),
                 'user_id' => $user->id,
                 'tanggal_registrasi' => today(),
                 'status' => 'pending',
@@ -80,13 +85,13 @@ class StudentRegistrationController extends Controller
         return $this->registrationPage(true);
     }
 
-    public function storeAdditional(StudentRegistrationRequest $request, ProfilePhotoService $profilePhotoService)
+    public function storeAdditional(StudentRegistrationRequest $request, ProfilePhotoService $profilePhotoService, StudentDocumentService $studentDocumentService)
     {
         $this->ensureRegistrationOpen();
         $parent = $this->currentParentUser();
         $data = $request->validated();
 
-        DB::transaction(function () use ($data, $parent): void {
+        DB::transaction(function () use ($data, $parent, $request, $studentDocumentService): void {
             Siswa::create([
                 ...Arr::except($data, [
                     'name',
@@ -95,7 +100,11 @@ class StudentRegistrationController extends Controller
                     'password_confirmation',
                     'thn_ajaran',
                     'foto_profil',
+                    'akta_kelahiran_file',
+                    'kartu_keluarga_file',
                 ]),
+                'akta_kelahiran_file' => $studentDocumentService->store($request->file('akta_kelahiran_file')),
+                'kartu_keluarga_file' => $studentDocumentService->store($request->file('kartu_keluarga_file')),
                 'user_id' => $parent->id,
                 'tanggal_registrasi' => today(),
                 'status' => 'pending',

@@ -28,6 +28,8 @@ interface RegistrationForm {
     password: string;
     password_confirmation: string;
     foto_profil: File | null;
+    akta_kelahiran_file: File | null;
+    kartu_keluarga_file: File | null;
     nik: string;
     nomor_kk: string;
     nama: string;
@@ -54,8 +56,17 @@ interface RegistrationForm {
     pekerjaan_ibu: string;
     penghasilan_ibu: string;
     nama_wali: string;
+    nohp_wali: string;
+    ttl_wali: string;
+    agama_wali: string;
+    pekerjaan_wali: string;
+    penghasilan_wali: string;
+    alamat_wali: string;
 }
-type RegistrationField = Exclude<keyof RegistrationForm, 'foto_profil'>;
+type RegistrationField = Exclude<
+    keyof RegistrationForm,
+    'foto_profil' | 'akta_kelahiran_file' | 'kartu_keluarga_file'
+>;
 interface Field {
     name: RegistrationField;
     label: string;
@@ -108,6 +119,14 @@ const motherFields: Field[] = [
     { name: 'ttl_ibu', label: 'Tanggal Lahir Ibu', type: 'date' },
     { name: 'agama_ibu', label: 'Agama Ibu', options: AGAMA_OPTIONS },
 ];
+const guardianFields: Field[] = [
+    { name: 'nama_wali', label: 'Nama Wali' },
+    { name: 'nohp_wali', label: 'No. HP Wali', type: 'tel' },
+    { name: 'ttl_wali', label: 'Tanggal Lahir Wali', type: 'date' },
+    { name: 'agama_wali', label: 'Agama Wali', options: AGAMA_OPTIONS },
+    { name: 'pekerjaan_wali', label: 'Pekerjaan Wali' },
+    { name: 'penghasilan_wali', label: 'Penghasilan Wali' },
+];
 const registrationSteps: { label: string; icon: Component }[] = [
     { label: 'Data Akun', icon: LockKeyhole },
     { label: 'Data Siswa', icon: School },
@@ -136,6 +155,8 @@ const form = useForm<RegistrationForm>({
     password: '',
     password_confirmation: '',
     foto_profil: null,
+    akta_kelahiran_file: null,
+    kartu_keluarga_file: null,
     nik: '',
     nomor_kk: '',
     nama: '',
@@ -162,6 +183,12 @@ const form = useForm<RegistrationForm>({
     pekerjaan_ibu: '',
     penghasilan_ibu: '',
     nama_wali: '',
+    nohp_wali: '',
+    ttl_wali: '',
+    agama_wali: '',
+    pekerjaan_wali: '',
+    penghasilan_wali: '',
+    alamat_wali: '',
 });
 const photoPreview = ref<string | null>(null);
 const fileInputRef = ref<HTMLInputElement | null>(null);
@@ -169,6 +196,12 @@ const onPhotoChange = (event: Event) => {
     const file = (event.target as HTMLInputElement).files?.[0] ?? null;
     form.foto_profil = file;
     photoPreview.value = file ? URL.createObjectURL(file) : null;
+};
+const onDocumentChange = (
+    field: 'akta_kelahiran_file' | 'kartu_keluarga_file',
+    event: Event,
+) => {
+    form[field] = (event.target as HTMLInputElement).files?.[0] ?? null;
 };
 const inputClass = (field: RegistrationField) =>
     form.errors[field]
@@ -718,6 +751,70 @@ const submit = () => {
                                     </div>
                                 </div>
                             </div>
+                            <div class="mt-6 rounded-2xl bg-muted/60 p-5">
+                                <h4 class="font-semibold">Data Wali</h4>
+                                <p class="mt-1 text-sm text-muted-foreground">
+                                    Isi apabila wali siswa berbeda dari ayah
+                                    atau ibu.
+                                </p>
+                                <div class="mt-5 grid gap-5 md:grid-cols-2">
+                                    <div
+                                        v-for="field in guardianFields"
+                                        :key="field.name"
+                                        class="space-y-2"
+                                    >
+                                        <label
+                                            :for="field.name"
+                                            class="text-sm font-medium"
+                                            >{{ field.label }}</label
+                                        >
+                                        <select
+                                            v-if="field.options"
+                                            :id="field.name"
+                                            v-model="form[field.name]"
+                                            class="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground"
+                                            :class="inputClass(field.name)"
+                                        >
+                                            <option value="">
+                                                Pilih {{ field.label }}
+                                            </option>
+                                            <option
+                                                v-for="option in field.options"
+                                                :key="option"
+                                                :value="option"
+                                            >
+                                                {{ option }}
+                                            </option>
+                                        </select>
+                                        <Input
+                                            v-else
+                                            :id="field.name"
+                                            v-model="form[field.name]"
+                                            :type="field.type ?? 'text'"
+                                            :class="inputClass(field.name)"
+                                        />
+                                        <InputError
+                                            :message="form.errors[field.name]"
+                                        />
+                                    </div>
+                                    <div class="space-y-2 md:col-span-2">
+                                        <label
+                                            for="alamat_wali"
+                                            class="text-sm font-medium"
+                                            >Alamat Wali</label
+                                        >
+                                        <textarea
+                                            id="alamat_wali"
+                                            v-model="form.alamat_wali"
+                                            class="min-h-24 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
+                                            :class="inputClass('alamat_wali')"
+                                        />
+                                        <InputError
+                                            :message="form.errors.alamat_wali"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
                         </section>
                         <section
                             v-show="currentStep === 3"
@@ -725,29 +822,13 @@ const submit = () => {
                             class="pt-2"
                         >
                             <h3 class="text-lg font-semibold">
-                                4. Data Wali & Foto Siswa
+                                4. Foto dan Dokumen Siswa
                             </h3>
                             <p class="mt-1 text-sm text-muted-foreground">
                                 Foto membantu sekolah mengidentifikasi calon
                                 siswa saat verifikasi.
                             </p>
                             <div class="mt-5 grid gap-6 md:grid-cols-2">
-                                <div class="space-y-2">
-                                    <label
-                                        for="nama_wali"
-                                        class="text-sm font-medium"
-                                        >Nama Wali</label
-                                    ><Input
-                                        id="nama_wali"
-                                        v-model="form.nama_wali"
-                                        :aria-invalid="
-                                            Boolean(form.errors.nama_wali)
-                                        "
-                                        :class="inputClass('nama_wali')"
-                                    /><InputError
-                                        :message="form.errors.nama_wali"
-                                    />
-                                </div>
                                 <div class="space-y-3">
                                     <label
                                         for="foto_profil"
@@ -785,6 +866,68 @@ const submit = () => {
                                     />
                                 </div>
                             </div>
+                            <div class="mt-6 grid gap-5 md:grid-cols-2">
+                                <div class="space-y-2">
+                                    <label
+                                        for="akta_kelahiran_file"
+                                        class="text-sm font-medium"
+                                        >Akta Kelahiran
+                                        <span class="text-destructive"
+                                            >*</span
+                                        ></label
+                                    >
+                                    <input
+                                        id="akta_kelahiran_file"
+                                        type="file"
+                                        required
+                                        accept=".pdf,.jpg,.jpeg,.png,.webp"
+                                        class="block w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
+                                        @change="
+                                            onDocumentChange(
+                                                'akta_kelahiran_file',
+                                                $event,
+                                            )
+                                        "
+                                    />
+                                    <InputError
+                                        :message="
+                                            form.errors.akta_kelahiran_file
+                                        "
+                                    />
+                                </div>
+                                <div class="space-y-2">
+                                    <label
+                                        for="kartu_keluarga_file"
+                                        class="text-sm font-medium"
+                                        >Kartu Keluarga
+                                        <span class="text-destructive"
+                                            >*</span
+                                        ></label
+                                    >
+                                    <input
+                                        id="kartu_keluarga_file"
+                                        type="file"
+                                        required
+                                        accept=".pdf,.jpg,.jpeg,.png,.webp"
+                                        class="block w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
+                                        @change="
+                                            onDocumentChange(
+                                                'kartu_keluarga_file',
+                                                $event,
+                                            )
+                                        "
+                                    />
+                                    <InputError
+                                        :message="
+                                            form.errors.kartu_keluarga_file
+                                        "
+                                    />
+                                </div>
+                            </div>
+                            <p class="mt-3 text-xs text-muted-foreground">
+                                Dokumen dapat berupa PDF, JPG, JPEG, PNG, atau
+                                WEBP dengan ukuran maksimal 5 MB per file.
+                            </p>
                             <div
                                 class="mt-6 flex gap-3 rounded-2xl border border-border bg-muted/60 p-4 text-sm text-muted-foreground"
                             >

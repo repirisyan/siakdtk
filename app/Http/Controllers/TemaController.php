@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\TemaRequest;
 use App\Models\Tema;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class TemaController extends Controller
@@ -18,7 +19,7 @@ class TemaController extends Controller
         $direction = request()->query('direction', 'desc');
         $status = request()->query('status');
 
-        $temas = Tema::query()
+        $temas = Tema::query()->withCount('subTemas')
             ->when($search, function ($query, $search) {
                 $query->where('nama_tema', 'like', "%{$search}%");
             })
@@ -51,7 +52,7 @@ class TemaController extends Controller
      */
     public function store(TemaRequest $request)
     {
-        Tema::create($request->validated());
+        Tema::create([...$request->validated(), 'status' => false]);
 
         return redirect()->route('tema.index')->with('success', 'Tema berhasil dibuat.');
     }
@@ -100,8 +101,11 @@ class TemaController extends Controller
 
     public function toggleStatus(Tema $tema)
     {
-        $tema->update(['status' => ! $tema->status]);
+        DB::transaction(function () use ($tema) {
+            Tema::where('status', true)->update(['status' => false]);
+            $tema->update(['status' => true]);
+        });
 
-        return redirect()->route('tema.index')->with('success', $tema->status ? 'Tema berhasil diaktifkan.' : 'Tema berhasil dinonaktifkan.');
+        return redirect()->route('tema.index')->with('success', 'Tema berhasil diaktifkan. Tema aktif sebelumnya telah dinonaktifkan.');
     }
 }

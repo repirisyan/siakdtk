@@ -22,6 +22,7 @@ interface Jadwal {
     jam_selesai: string;
     guru: { nama: string };
     tema: { nama_tema: string };
+    subTema: { nama_sub_tema: string } | null;
 }
 type StatusAbsen = 'hadir' | 'izin' | 'sakit' | 'alfa';
 interface Nilai {
@@ -148,6 +149,18 @@ const table = useVueTable({
         <div
             class="rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm"
         >
+            <p v-if="selectedJadwal" class="mb-4 text-sm text-muted-foreground">
+                Tema:
+                {{
+                    jadwals.find((item) => item.id === Number(selectedJadwal))
+                        ?.tema.nama_tema ?? '-'
+                }}
+                · Sub Tema:
+                {{
+                    jadwals.find((item) => item.id === Number(selectedJadwal))
+                        ?.subTema?.nama_sub_tema ?? '-'
+                }}
+            </p>
             <div class="grid gap-4 md:grid-cols-2">
                 <div class="space-y-2">
                     <label for="kelas_id" class="text-sm font-medium"

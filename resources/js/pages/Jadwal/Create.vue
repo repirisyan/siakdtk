@@ -18,9 +18,10 @@ interface Guru {
     nama: string;
     nip: string;
 }
-interface Tema {
+interface SubTema {
     id: number;
-    nama_tema: string;
+    nama_sub_tema: string;
+    tema: { nama_tema: string; thn_ajaran: string };
 }
 
 defineOptions({
@@ -35,13 +36,13 @@ defineOptions({
 const page = usePage();
 const kelas = computed(() => page.props.kelas as Kelas[]);
 const gurus = computed(() => page.props.gurus as Guru[]);
-const temas = computed(() => page.props.temas as Tema[]);
+const subTemas = computed(() => page.props.subTemas as SubTema[]);
 const canSelectGuru = computed(() => page.props.canSelectGuru as boolean);
 const currentGuru = computed(() => page.props.currentGuru as Guru | null);
 const form = useForm({
     kelas_id: '',
     guru_id: '',
-    tema_id: '',
+    sub_tema_id: '',
     tanggal: '',
     jam_mulai: '',
     jam_selesai: '',
@@ -107,21 +108,22 @@ const submit = () => form.post(JadwalController.store().url);
                     </p>
                 </div>
                 <div class="space-y-2">
-                    <label for="tema_id" class="text-sm font-medium">Tema</label
+                    <label for="sub_tema_id" class="text-sm font-medium"
+                        >Sub Tema</label
                     ><select
-                        id="tema_id"
-                        v-model="form.tema_id"
+                        id="sub_tema_id"
+                        v-model="form.sub_tema_id"
                         class="h-9 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground"
                     >
-                        <option value="">Pilih tema</option>
+                        <option value="">Pilih sub tema dari tema aktif</option>
                         <option
-                            v-for="item in temas"
+                            v-for="item in subTemas"
                             :key="item.id"
                             :value="String(item.id)"
                         >
-                            {{ item.nama_tema }}
+                            {{ item.tema.nama_tema }} — {{ item.nama_sub_tema }}
                         </option></select
-                    ><InputError :message="form.errors.tema_id" />
+                    ><InputError :message="form.errors.sub_tema_id" />
                 </div>
                 <div class="grid gap-4 md:grid-cols-3">
                     <div class="space-y-2">

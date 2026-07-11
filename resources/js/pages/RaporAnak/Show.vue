@@ -7,11 +7,13 @@ import Button from '@/components/ui/button/Button.vue';
 
 interface Rapor {
     thn_ajaran: string;
-    keterangan: string;
-    validated_at: string | null;
-    tema: { nama_tema: string };
-    guru: { nama: string; nip: string | null };
-    validator: { name: string; email: string } | null;
+    approved_at: string | null;
+    details: {
+        keterangan: string;
+        tema: { nama_tema: string };
+        guru: { nama: string; nip: string | null };
+    }[];
+    approver: { name: string; email: string } | null;
 }
 
 interface Siswa {
@@ -23,10 +25,11 @@ interface Siswa {
 const page = usePage();
 const rapor = computed(() => page.props.rapor as Rapor);
 const siswa = computed(() => page.props.siswa as Siswa);
+const printRapor = () => window.print();
 </script>
 
 <template>
-    <Head :title="`Rapor Anak - ${rapor.tema.nama_tema}`" />
+    <Head title="Rapor Anak" />
     <div class="max-w-3xl space-y-6 p-4 text-foreground">
         <div class="flex items-center justify-between gap-4">
             <div>
@@ -35,11 +38,15 @@ const siswa = computed(() => page.props.siswa as Siswa);
                     Catatan perkembangan siswa yang telah disetujui.
                 </p>
             </div>
-            <Button as-child variant="outline"
-                ><Link :href="RaporAnakController.index().url"
-                    >Kembali</Link
-                ></Button
-            >
+            <div class="flex gap-2">
+                <Button variant="outline" @click="printRapor"
+                    >Cetak / Simpan PDF</Button
+                ><Button as-child variant="outline"
+                    ><Link :href="RaporAnakController.index().url"
+                        >Kembali</Link
+                    ></Button
+                >
+            </div>
         </div>
 
         <div
@@ -65,22 +72,11 @@ const siswa = computed(() => page.props.siswa as Siswa);
                     <dd class="font-medium">{{ rapor.thn_ajaran }}</dd>
                 </div>
                 <div>
-                    <dt class="text-sm text-muted-foreground">Tema</dt>
-                    <dd class="font-medium">{{ rapor.tema.nama_tema }}</dd>
-                </div>
-                <div>
-                    <dt class="text-sm text-muted-foreground">Guru Penilai</dt>
-                    <dd class="font-medium">
-                        {{ rapor.guru.nama
-                        }}{{ rapor.guru.nip ? ` - ${rapor.guru.nip}` : '' }}
-                    </dd>
-                </div>
-                <div>
                     <dt class="text-sm text-muted-foreground">
-                        Kepsek Validator
+                        Kepala Sekolah
                     </dt>
                     <dd class="font-medium">
-                        {{ rapor.validator?.name ?? '-' }}
+                        {{ rapor.approver?.name ?? '-' }}
                     </dd>
                 </div>
                 <div>
@@ -89,8 +85,8 @@ const siswa = computed(() => page.props.siswa as Siswa);
                     </dt>
                     <dd class="font-medium">
                         {{
-                            rapor.validated_at
-                                ? new Date(rapor.validated_at).toLocaleString(
+                            rapor.approved_at
+                                ? new Date(rapor.approved_at).toLocaleString(
                                       'id-ID',
                                   )
                                 : '-'
@@ -103,10 +99,20 @@ const siswa = computed(() => page.props.siswa as Siswa);
         <div
             class="rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm"
         >
-            <h2 class="font-semibold">Keterangan Perkembangan Siswa</h2>
-            <p class="mt-4 leading-7 whitespace-pre-wrap">
-                {{ rapor.keterangan }}
-            </p>
+            <h2 class="font-semibold">Keterangan Perkembangan per Tema</h2>
+            <div
+                v-for="detail in rapor.details"
+                :key="detail.tema.nama_tema"
+                class="mt-5 border-t border-border pt-4 first:border-0 first:pt-0"
+            >
+                <p class="font-medium">{{ detail.tema.nama_tema }}</p>
+                <p class="mt-1 text-sm text-muted-foreground">
+                    Guru Penilai: {{ detail.guru.nama }}
+                </p>
+                <p class="mt-3 leading-7 whitespace-pre-wrap">
+                    {{ detail.keterangan }}
+                </p>
+            </div>
         </div>
     </div>
 </template>

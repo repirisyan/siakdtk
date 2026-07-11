@@ -32,4 +32,9 @@ class Tema extends Model
     {
         return $this->hasMany(Rapor::class, 'tema_id');
     }
+
+    public function subTemas(): HasMany
+    {
+        return $this->hasMany(SubTema::class);
+    }
 }

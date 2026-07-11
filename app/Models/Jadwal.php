@@ -26,4 +26,9 @@ class Jadwal extends Model
     {
         return $this->belongsTo(Tema::class);
     }
+
+    public function subTema(): BelongsTo
+    {
+        return $this->belongsTo(SubTema::class);
+    }
 }

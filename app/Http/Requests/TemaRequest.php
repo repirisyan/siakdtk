@@ -24,6 +24,7 @@ class TemaRequest extends FormRequest
     {
         return [
             'nama_tema' => ['required', 'string', 'max:255'],
+            'thn_ajaran' => ['required', 'digits:4'],
         ];
     }
 }

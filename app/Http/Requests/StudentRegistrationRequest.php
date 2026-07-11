@@ -22,6 +22,8 @@ class StudentRegistrationRequest extends FormRequest
             'email' => [$isExistingParent ? 'nullable' : 'required', 'string', 'email', 'max:255', 'unique:users,email'],
             'password' => [$isExistingParent ? 'nullable' : 'required', 'string', 'min:8', 'confirmed'],
             'foto_profil' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'akta_kelahiran_file' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png,webp', 'max:5120'],
+            'kartu_keluarga_file' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png,webp', 'max:5120'],
             'nik' => ['required', 'string', 'max:20', 'unique:siswas,nik'],
             'nomor_kk' => ['required', 'string', 'max:20'],
             'nama' => ['required', 'string', 'max:255'],
@@ -48,6 +50,12 @@ class StudentRegistrationRequest extends FormRequest
             'pekerjaan_ibu' => ['nullable', 'string', 'max:255'],
             'penghasilan_ibu' => ['nullable', 'string', 'max:255'],
             'nama_wali' => ['nullable', 'string', 'max:255'],
+            'nohp_wali' => ['nullable', 'string', 'max:15'],
+            'ttl_wali' => ['nullable', 'date'],
+            'agama_wali' => ['nullable', 'string', Rule::in($agama)],
+            'pekerjaan_wali' => ['nullable', 'string', 'max:255'],
+            'penghasilan_wali' => ['nullable', 'string', 'max:255'],
+            'alamat_wali' => ['nullable', 'string', 'max:1000'],
         ];
     }
 }

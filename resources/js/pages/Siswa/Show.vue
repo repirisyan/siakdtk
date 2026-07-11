@@ -36,6 +36,14 @@ interface Siswa {
     pekerjaan_ibu: string | null;
     penghasilan_ibu: string | null;
     nama_wali: string | null;
+    nohp_wali: string | null;
+    ttl_wali: string | null;
+    agama_wali: string | null;
+    pekerjaan_wali: string | null;
+    penghasilan_wali: string | null;
+    alamat_wali: string | null;
+    akta_kelahiran_file: string | null;
+    kartu_keluarga_file: string | null;
     kelas_id: number;
     user_id: number;
     user: {
@@ -67,7 +75,7 @@ defineOptions({
 
 const page = usePage();
 const siswa = computed(() => page.props.siswa as Siswa);
-const details = computed<Detail[]>(() => [
+const accountDetails = computed<Detail[]>(() => [
     ['Nama Akun Orangtua', siswa.value.user.name],
     ['Email Orangtua', siswa.value.user.email],
     ['Status Akun Orangtua', siswa.value.user.status ? 'Aktif' : 'Nonaktif'],
@@ -77,6 +85,8 @@ const details = computed<Detail[]>(() => [
     ['Approved At', siswa.value.approved_at],
     ['Nama Kelas', siswa.value.kelas.nama_kelas],
     ['Tahun Ajaran', siswa.value.kelas.thn_ajaran],
+]);
+const studentDetails = computed<Detail[]>(() => [
     ['NIS', siswa.value.nis],
     ['NISN', siswa.value.nisn],
     ['NIK', siswa.value.nik],
@@ -91,21 +101,34 @@ const details = computed<Detail[]>(() => [
     ['Berat Badan', siswa.value.berat_bdn],
     ['Anak Ke', siswa.value.anak_ke],
     ['Jumlah Saudara', siswa.value.jml_sdr],
-    ['Alamat', siswa.value.alamat],
+    ['Alamat Siswa', siswa.value.alamat],
+]);
+const fatherDetails = computed<Detail[]>(() => [
     ['Nama Ayah', siswa.value.nama_ayah],
     ['Nomor HP Ayah', siswa.value.nohp_ayah],
     ['Tanggal Lahir Ayah', siswa.value.ttl_ayah],
     ['Agama Ayah', siswa.value.agama_ayah],
     ['Pekerjaan Ayah', siswa.value.pekerjaan],
     ['Penghasilan Ayah', siswa.value.penghasilan],
+]);
+const motherDetails = computed<Detail[]>(() => [
     ['Nama Ibu', siswa.value.nama_ibu],
     ['Nomor HP Ibu', siswa.value.nohp_ibu],
     ['Tanggal Lahir Ibu', siswa.value.ttl_ibu],
     ['Agama Ibu', siswa.value.agama_ibu],
     ['Pekerjaan Ibu', siswa.value.pekerjaan_ibu],
     ['Penghasilan Ibu', siswa.value.penghasilan_ibu],
-    ['Nama Wali', siswa.value.nama_wali],
 ]);
+const guardianDetails = computed<Detail[]>(() => [
+    ['Nama Wali', siswa.value.nama_wali],
+    ['Nomor HP Wali', siswa.value.nohp_wali],
+    ['Tanggal Lahir Wali', siswa.value.ttl_wali],
+    ['Agama Wali', siswa.value.agama_wali],
+    ['Pekerjaan Wali', siswa.value.pekerjaan_wali],
+    ['Penghasilan Wali', siswa.value.penghasilan_wali],
+    ['Alamat Wali', siswa.value.alamat_wali],
+]);
+const documentUrl = (path: string | null) => (path ? `/storage/${path}` : null);
 </script>
 
 <template>
@@ -142,9 +165,10 @@ const details = computed<Detail[]>(() => [
                     <p class="font-medium">{{ siswa.user.name }}</p>
                 </div>
             </div>
+            <h2 class="mb-4 text-lg font-semibold">Akun Orangtua dan Status</h2>
             <dl class="grid gap-4 md:grid-cols-2">
                 <div
-                    v-for="[label, value] in details"
+                    v-for="[label, value] in accountDetails"
                     :key="label"
                     class="space-y-1"
                 >
@@ -152,6 +176,106 @@ const details = computed<Detail[]>(() => [
                     <dd class="font-medium">{{ value || '-' }}</dd>
                 </div>
             </dl>
+
+            <h2 class="mt-8 mb-4 text-lg font-semibold">Data Siswa</h2>
+            <dl class="grid gap-4 md:grid-cols-2">
+                <div
+                    v-for="[label, value] in studentDetails"
+                    :key="label"
+                    class="space-y-1"
+                >
+                    <dt class="text-sm text-muted-foreground">{{ label }}</dt>
+                    <dd class="font-medium">{{ value || '-' }}</dd>
+                </div>
+            </dl>
+
+            <div class="mt-8 grid gap-6 lg:grid-cols-2">
+                <section class="rounded-xl border border-border p-5">
+                    <h2 class="mb-4 text-lg font-semibold">Data Ayah</h2>
+                    <dl class="grid gap-4">
+                        <div
+                            v-for="[label, value] in fatherDetails"
+                            :key="label"
+                            class="space-y-1"
+                        >
+                            <dt class="text-sm text-muted-foreground">
+                                {{ label }}
+                            </dt>
+                            <dd class="font-medium">{{ value || '-' }}</dd>
+                        </div>
+                    </dl>
+                </section>
+                <section class="rounded-xl border border-border p-5">
+                    <h2 class="mb-4 text-lg font-semibold">Data Ibu</h2>
+                    <dl class="grid gap-4">
+                        <div
+                            v-for="[label, value] in motherDetails"
+                            :key="label"
+                            class="space-y-1"
+                        >
+                            <dt class="text-sm text-muted-foreground">
+                                {{ label }}
+                            </dt>
+                            <dd class="font-medium">{{ value || '-' }}</dd>
+                        </div>
+                    </dl>
+                </section>
+            </div>
+
+            <section class="mt-6 rounded-xl border border-border p-5">
+                <h2 class="mb-4 text-lg font-semibold">Data Wali</h2>
+                <dl class="grid gap-4 md:grid-cols-2">
+                    <div
+                        v-for="[label, value] in guardianDetails"
+                        :key="label"
+                        class="space-y-1"
+                    >
+                        <dt class="text-sm text-muted-foreground">
+                            {{ label }}
+                        </dt>
+                        <dd class="font-medium">{{ value || '-' }}</dd>
+                    </div>
+                </dl>
+            </section>
+
+            <section class="mt-6 rounded-xl border border-border p-5">
+                <h2 class="mb-4 text-lg font-semibold">Dokumen Siswa</h2>
+                <div class="flex flex-wrap gap-3">
+                    <Button
+                        v-if="documentUrl(siswa.akta_kelahiran_file)"
+                        as-child
+                        variant="outline"
+                    >
+                        <a
+                            :href="documentUrl(siswa.akta_kelahiran_file)!"
+                            target="_blank"
+                            rel="noopener"
+                            >Lihat Akta Kelahiran</a
+                        >
+                    </Button>
+                    <Button
+                        v-if="documentUrl(siswa.kartu_keluarga_file)"
+                        as-child
+                        variant="outline"
+                    >
+                        <a
+                            :href="documentUrl(siswa.kartu_keluarga_file)!"
+                            target="_blank"
+                            rel="noopener"
+                            >Lihat Kartu Keluarga</a
+                        >
+                    </Button>
+                    <p
+                        v-if="
+                            !siswa.akta_kelahiran_file &&
+                            !siswa.kartu_keluarga_file
+                        "
+                        class="text-sm text-muted-foreground"
+                    >
+                        Dokumen belum diunggah.
+                    </p>
+                </div>
+            </section>
 
             <div class="mt-6 flex gap-2">
                 <Button as-child variant="secondary">

@@ -28,7 +28,9 @@ class JadwalRequest extends FormRequest
             'guru_id' => in_array($this->user()->role?->role_name, ['Admin', 'Staff Akademik'], true)
                 ? ['required', 'integer', 'exists:gurus,id']
                 : ['nullable', 'integer'],
-            'tema_id' => ['required', 'integer', Rule::exists('temas', 'id')->where('status', true)],
+            'sub_tema_id' => ['required', 'integer', Rule::exists('sub_temas', 'id')->whereExists(function ($query) {
+                $query->selectRaw('1')->from('temas')->whereColumn('temas.id', 'sub_temas.tema_id')->where('status', true);
+            })],
             'tanggal' => ['required', 'date'],
             'jam_mulai' => ['required', 'date_format:H:i'],
             'jam_selesai' => ['required', 'date_format:H:i', 'after:jam_mulai'],

@@ -26,8 +26,6 @@ class ApproveSiswaRequest extends FormRequest
                     fn ($query) => $query->where('thn_ajaran', $this->input('thn_ajaran'))->where('status', true),
                 ),
             ],
-            'nis' => ['required', 'string', 'max:20'],
-            'nisn' => ['nullable', 'string', 'max:20'],
         ];
     }
 }

@@ -11,6 +11,7 @@ use App\Http\Controllers\KontenGaleriController;
 use App\Http\Controllers\LandingPageController;
 use App\Http\Controllers\MidtransCallbackController;
 use App\Http\Controllers\PenilaianController;
+use App\Http\Controllers\RaporAkhirController;
 use App\Http\Controllers\RaporAnakController;
 use App\Http\Controllers\RaporController;
 use App\Http\Controllers\SchoolSettingController;
@@ -18,6 +19,7 @@ use App\Http\Controllers\SiswaController;
 use App\Http\Controllers\SppController;
 use App\Http\Controllers\SppPembayaranController;
 use App\Http\Controllers\StudentRegistrationController;
+use App\Http\Controllers\SubTemaController;
 use App\Http\Controllers\TagihanSayaController;
 use App\Http\Controllers\TemaController;
 use App\Http\Controllers\UserController;
@@ -45,6 +47,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('tambah-anak', [StudentRegistrationController::class, 'createAdditional'])->name('anak.create');
     Route::post('tambah-anak', [StudentRegistrationController::class, 'storeAdditional'])->name('anak.store');
     Route::resource('tema', TemaController::class);
+    Route::resource('sub-tema', SubTemaController::class);
     Route::patch('tema/{tema}/toggle-status', [TemaController::class, 'toggleStatus'])->name('tema.toggle-status');
     Route::resource('users', UserController::class);
     Route::patch('users/{user}/toggle-status', [UserController::class, 'toggleStatus'])
@@ -98,9 +101,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('jadwal', JadwalController::class)->parameters([
         'jadwal' => 'jadwal',
     ]);
-    Route::resource('absensi', AbsenController::class)->only(['index', 'store']);
+    Route::resource('absensi', AbsenController::class)->parameters([
+        'absensi' => 'absen',
+    ])->only(['index', 'store', 'destroy']);
     Route::resource('penilaian', PenilaianController::class)->only(['index', 'store']);
     Route::resource('rapor', RaporController::class)->only(['index', 'store', 'show', 'update']);
+    Route::get('hasil-akhir-rapor', [RaporAkhirController::class, 'index'])->name('rapor-akhir.index');
+    Route::post('hasil-akhir-rapor', [RaporAkhirController::class, 'store'])->name('rapor-akhir.store');
+    Route::post('hasil-akhir-rapor/{raporAkhir}/submit', [RaporAkhirController::class, 'submit'])->name('rapor-akhir.submit');
+    Route::post('hasil-akhir-rapor/{raporAkhir}/approve', [RaporAkhirController::class, 'approve'])->name('rapor-akhir.approve');
+    Route::post('hasil-akhir-rapor/{raporAkhir}/reject', [RaporAkhirController::class, 'reject'])->name('rapor-akhir.reject');
+    Route::post('hasil-akhir-rapor/approve-all', [RaporAkhirController::class, 'approveAll'])->name('rapor-akhir.approve-all');
     Route::resource('rapor-anak', RaporAnakController::class)
         ->parameters(['rapor-anak' => 'rapor'])
         ->only(['index', 'show']);

@@ -71,6 +71,7 @@ class UserController extends Controller
     public function create()
     {
         $this->authorizeAdmin();
+
         return Inertia::render('User/Create', [
             'roles' => $this->roles(),
         ]);

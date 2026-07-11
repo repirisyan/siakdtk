@@ -52,7 +52,12 @@ class RaporController extends Controller
             'currentGuru' => $user->hasRole('Guru')
                 ? $user->guru->only(['id', 'nama', 'nip'])
                 : null,
-            'temas' => Tema::active()->orderBy('nama_tema')->get(['id', 'nama_tema']),
+            'temas' => $selectedKelas
+                ? Tema::where('thn_ajaran', $selectedKelas->thn_ajaran)
+                    ->whereHas('jadwal', fn ($query) => $query->where('kelas_id', $selectedKelas->id))
+                    ->orderBy('nama_tema')
+                    ->get(['id', 'nama_tema', 'thn_ajaran'])
+                : collect(),
             'siswas' => $siswas,
             'rapors' => $rapors,
             'canManageRapor' => $user->hasRole('Guru'),

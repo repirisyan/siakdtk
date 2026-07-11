@@ -15,11 +15,15 @@ class TemaFactory extends Factory
      *
      * @return array<string, mixed>
      */
+    protected $model = Tema::class;
+
     public function definition(): array
+
     {
+
         return [
 
-            'nama_tema' => $this->faker->randomElement([
+            'nama_tema' => fake()->randomElement([
 
                 'Diriku',
 
@@ -43,6 +47,15 @@ class TemaFactory extends Factory
 
             ]),
 
+            'thn_ajaran' => fake()->numberBetween(
+
+                now()->year - 1,
+
+                now()->year + 1
+
+            ),
+
         ];
+
     }
 }

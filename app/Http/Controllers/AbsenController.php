@@ -89,6 +89,26 @@ class AbsenController extends Controller
             ->with('success', $message);
     }
 
+    public function destroy(Absen $absen)
+    {
+        $user = $this->currentAttendanceUser();
+        $jadwal = $this->authorizeJadwal($user, $absen->jadwal_id);
+
+        abort_unless(
+            $absen->siswa()->value('kelas_id') === $jadwal->kelas_id,
+            403,
+        );
+
+        $absen->delete();
+
+        return redirect()
+            ->route('absensi.index', [
+                'kelas_id' => $jadwal->kelas_id,
+                'jadwal_id' => $jadwal->id,
+            ])
+            ->with('success', 'Absensi berhasil dibatalkan.');
+    }
+
     private function kelasForUser(User $user)
     {
         return Kelas::query()

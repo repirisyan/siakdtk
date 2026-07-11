@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Rapor;
+use App\Models\RaporAkhir;
 use App\Models\User;
 use Inertia\Inertia;
 
@@ -17,10 +17,10 @@ class RaporAnakController extends Controller
 
         abort_unless(! $siswaId || $siswas->contains('id', (int) $siswaId), 403);
 
-        $tahunAjaranOptions = Rapor::whereIn('siswa_id', $siswas->pluck('id'))
+        $tahunAjaranOptions = RaporAkhir::whereIn('siswa_id', $siswas->pluck('id'))
             ->where('status', 'disetujui')
             ->select('thn_ajaran')->distinct()->orderByDesc('thn_ajaran')->pluck('thn_ajaran');
-        $rapors = Rapor::with(['tema:id,nama_tema', 'guru:id,nama,nip', 'validator:id,name,email', 'siswa:id,kelas_id,nama,nis'])
+        $rapors = RaporAkhir::with(['details.tema:id,nama_tema', 'details.guru:id,nama,nip', 'approver:id,name,email', 'siswa:id,kelas_id,nama,nis'])
             ->whereIn('siswa_id', $siswas->pluck('id'))
             ->where('status', 'disetujui')
             ->when($siswaId, fn ($query) => $query->where('siswa_id', $siswaId))
@@ -35,13 +35,13 @@ class RaporAnakController extends Controller
         ]);
     }
 
-    public function show(Rapor $rapor)
+    public function show(RaporAkhir $rapor)
     {
         $user = $this->currentParentUser();
         abort_unless($rapor->status === 'disetujui' && $user->siswas()->whereKey($rapor->siswa_id)->exists(), 403);
 
         return Inertia::render('RaporAnak/Show', [
-            'rapor' => $rapor->load(['tema:id,nama_tema', 'guru:id,nama,nip', 'validator:id,name,email']),
+            'rapor' => $rapor->load(['details.tema:id,nama_tema', 'details.guru:id,nama,nip', 'approver:id,name,email']),
             'siswa' => $rapor->siswa()->with('kelas:id,nama_kelas,thn_ajaran')->firstOrFail(),
         ]);
     }

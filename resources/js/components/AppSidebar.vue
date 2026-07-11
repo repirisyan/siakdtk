@@ -33,6 +33,7 @@ import {
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
 import { index as temaIndex } from '@/actions/App/Http/Controllers/TemaController';
+import { index as subTemaIndex } from '@/actions/App/Http/Controllers/SubTemaController';
 import { index as siswaIndex } from '@/actions/App/Http/Controllers/SiswaController';
 import { index as kelasIndex } from '@/actions/App/Http/Controllers/KelasController';
 import { index as guruIndex } from '@/actions/App/Http/Controllers/GuruController';
@@ -40,6 +41,7 @@ import { index as jadwalIndex } from '@/actions/App/Http/Controllers/JadwalContr
 import { index as absensiIndex } from '@/actions/App/Http/Controllers/AbsenController';
 import { index as penilaianIndex } from '@/actions/App/Http/Controllers/PenilaianController';
 import { index as raporIndex } from '@/actions/App/Http/Controllers/RaporController';
+import { index as raporAkhirIndex } from '@/actions/App/Http/Controllers/RaporAkhirController';
 import { validationIndex as validasiRaporIndex } from '@/actions/App/Http/Controllers/RaporController';
 import { index as userIndex } from '@/actions/App/Http/Controllers/UserController';
 import { index as raporAnakIndex } from '@/actions/App/Http/Controllers/RaporAnakController';
@@ -82,6 +84,12 @@ const menus: SidebarMenuItem[] = [
     {
         title: 'Kelola Tema',
         href: temaIndex(),
+        icon: BookOpen,
+        roles: ['Admin', 'Staff Akademik'],
+    },
+    {
+        title: 'Kelola Sub Tema',
+        href: subTemaIndex(),
         icon: BookOpen,
         roles: ['Admin', 'Staff Akademik'],
     },
@@ -132,6 +140,12 @@ const menus: SidebarMenuItem[] = [
         href: raporIndex(),
         icon: BookOpenCheck,
         roles: ['Admin', 'Staff Akademik', 'Guru'],
+    },
+    {
+        title: 'Hasil Akhir Rapor',
+        href: raporAkhirIndex(),
+        icon: BookOpenCheck,
+        roles: ['Admin', 'Staff Akademik', 'Guru', 'Kepsek'],
     },
     {
         title: 'Validasi Rapor',

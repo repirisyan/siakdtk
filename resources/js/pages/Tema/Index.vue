@@ -224,7 +224,6 @@ const table = useVueTable({
                             {{ row.original.id }}
                         </td>
 
-
                         <td class="px-4 py-3">
                             {{ row.original.nama_tema }}
                         </td>

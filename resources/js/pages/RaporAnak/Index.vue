@@ -14,10 +14,11 @@ interface Siswa {
 interface Rapor {
     id: number;
     thn_ajaran: string;
-    keterangan: string;
-    validated_at: string | null;
-    tema: { nama_tema: string };
-    guru: { nama: string; nip: string | null };
+    approved_at: string | null;
+    details: {
+        tema: { nama_tema: string };
+        guru: { nama: string; nip: string | null };
+    }[];
     siswa: { nama: string; nis: string | null };
 }
 
@@ -126,15 +127,9 @@ const loadRapor = () => {
                         <th class="px-4 py-3 text-left text-sm font-medium">
                             Nama Siswa
                         </th>
-                        <th class="px-4 py-3 text-left text-sm font-medium">
-                            Tema
-                        </th>
-                        <th class="px-4 py-3 text-left text-sm font-medium">
-                            Keterangan
-                        </th>
-                        <th class="px-4 py-3 text-left text-sm font-medium">
-                            Guru Penilai
-                        </th>
+                        <th
+                            class="px-4 py-3 text-left text-sm font-medium"
+                        ></th>
                         <th class="px-4 py-3 text-left text-sm font-medium">
                             Tanggal Validasi
                         </th>
@@ -152,20 +147,11 @@ const loadRapor = () => {
                         <td class="px-4 py-3 font-medium">
                             {{ rapor.siswa.nama }}
                         </td>
-                        <td class="px-4 py-3 font-medium">
-                            {{ rapor.tema.nama_tema }}
-                        </td>
-                        <td
-                            class="max-w-md px-4 py-3 text-sm text-muted-foreground"
-                        >
-                            {{ rapor.keterangan }}
-                        </td>
-                        <td class="px-4 py-3">{{ rapor.guru.nama }}</td>
                         <td class="px-4 py-3">
                             {{
-                                rapor.validated_at
+                                rapor.approved_at
                                     ? new Date(
-                                          rapor.validated_at,
+                                          rapor.approved_at,
                                       ).toLocaleString('id-ID')
                                     : '-'
                             }}
@@ -184,7 +170,7 @@ const loadRapor = () => {
                     </tr>
                     <tr v-if="!rapors.length">
                         <td
-                            colspan="6"
+                            colspan="3"
                             class="py-8 text-center text-muted-foreground"
                         >
                             Belum ada rapor yang disetujui.

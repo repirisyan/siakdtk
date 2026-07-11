@@ -18,6 +18,7 @@ interface Jadwal {
     kelas: { nama_kelas: string };
     guru: { nama: string; nip: string };
     tema: { nama_tema: string };
+    subTema: { nama_sub_tema: string } | null;
 }
 interface PaginationLink {
     url: string | null;
@@ -95,7 +96,8 @@ const columns: ColumnDef<Jadwal>[] = [
     },
     { accessorFn: (row) => row.guru.nama, id: 'nama_guru', header: 'Guru' },
     {
-        accessorFn: (row) => row.tema.nama_tema,
+        accessorFn: (row) =>
+            `${row.tema.nama_tema} — ${row.subTema?.nama_sub_tema ?? '-'}`,
         id: 'nama_tema',
         header: 'Tema',
     },
@@ -108,7 +110,7 @@ const tableColumns = [
     { key: 'jam_selesai', label: 'Jam Selesai' },
     { key: 'nama_kelas', label: 'Kelas' },
     { key: 'nama_guru', label: 'Guru' },
-    { key: 'nama_tema', label: 'Tema' },
+    { key: 'nama_tema', label: 'Tema / Sub Tema' },
     { key: 'created_at', label: 'Dibuat' },
 ];
 const table = useVueTable({
@@ -169,7 +171,8 @@ const table = useVueTable({
                         </td>
                         <td class="px-4 py-3">{{ row.original.guru.nama }}</td>
                         <td class="px-4 py-3">
-                            {{ row.original.tema.nama_tema }}
+                            {{ row.original.tema.nama_tema }} —
+                            {{ row.original.subTema?.nama_sub_tema ?? '-' }}
                         </td>
                         <td class="px-4 py-3">
                             {{

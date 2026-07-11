@@ -75,8 +75,6 @@ const moveForm = useForm({
 const approvalForm = useForm({
     thn_ajaran: '',
     kelas_id: '',
-    nis: '',
-    nisn: '',
 });
 const approvalAction = ref<'approve' | 'reject' | null>(null);
 
@@ -197,7 +195,6 @@ const openApproval = (siswa: Siswa, action: 'approve' | 'reject') => {
     approvalForm.reset();
     approvalForm.thn_ajaran = siswa.kelas?.thn_ajaran ?? '';
     approvalForm.kelas_id = siswa.kelas_id ? String(siswa.kelas_id) : '';
-    approvalForm.nis = siswa.nis ?? '';
     approvalForm.clearErrors();
 };
 
@@ -629,22 +626,6 @@ const table = useVueTable({
                             </option>
                         </select>
                         <InputError :message="approvalForm.errors.kelas_id" />
-                    </div>
-                    <div class="space-y-2">
-                        <label for="approval_nis" class="text-sm font-medium"
-                            >NIS</label
-                        ><Input
-                            id="approval_nis"
-                            v-model="approvalForm.nis"
-                        /><InputError :message="approvalForm.errors.nis" />
-                    </div>
-                    <div class="space-y-2">
-                        <label for="approval_nisn" class="text-sm font-medium"
-                            >NISN</label
-                        ><Input
-                            id="approval_nisn"
-                            v-model="approvalForm.nisn"
-                        /><InputError :message="approvalForm.errors.nisn" />
                     </div>
                 </div>
                 <div class="mt-6 flex justify-end gap-2">

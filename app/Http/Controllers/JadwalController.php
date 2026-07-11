@@ -6,6 +6,7 @@ use App\Http\Requests\JadwalRequest;
 use App\Models\Guru;
 use App\Models\Jadwal;
 use App\Models\Kelas;
+use App\Models\SubTema;
 use App\Models\Tema;
 use App\Models\User;
 use Inertia\Inertia;
@@ -27,6 +28,7 @@ class JadwalController extends Controller
             'kelas:id,nama_kelas,thn_ajaran',
             'guru:id,nama,nip',
             'tema:id,nama_tema',
+            'subTema:id,tema_id,nama_sub_tema',
         ])
             ->when($search, function ($query, $search) {
                 $query->where(function ($query) use ($search) {
@@ -84,9 +86,11 @@ class JadwalController extends Controller
     public function store(JadwalRequest $request)
     {
         $data = $request->validated();
+        $subTema = SubTema::whereKey($data['sub_tema_id'])->whereHas('tema', fn ($query) => $query->where('status', true))->firstOrFail();
 
         Jadwal::create([
             ...$data,
+            'tema_id' => $subTema->tema_id,
             'guru_id' => $this->guruIdForCurrentUser($data),
         ]);
 
@@ -101,7 +105,7 @@ class JadwalController extends Controller
     public function show(Jadwal $jadwal)
     {
         return Inertia::render('Jadwal/Show', [
-            'jadwal' => $jadwal->load(['kelas:id,nama_kelas,thn_ajaran', 'guru:id,nama,nip', 'tema:id,nama_tema']),
+            'jadwal' => $jadwal->load(['kelas:id,nama_kelas,thn_ajaran', 'guru:id,nama,nip', 'tema:id,nama_tema', 'subTema:id,tema_id,nama_sub_tema']),
         ]);
     }
 
@@ -113,7 +117,7 @@ class JadwalController extends Controller
         $this->authorizeJadwal($jadwal);
 
         return Inertia::render('Jadwal/Edit', [
-            'jadwal' => $jadwal->load(['kelas:id,nama_kelas,thn_ajaran', 'guru:id,nama,nip', 'tema:id,nama_tema']),
+            'jadwal' => $jadwal->load(['kelas:id,nama_kelas,thn_ajaran', 'guru:id,nama,nip', 'tema:id,nama_tema', 'subTema:id,tema_id,nama_sub_tema']),
             ...$this->formOptions(),
         ]);
     }
@@ -125,9 +129,11 @@ class JadwalController extends Controller
     {
         $this->authorizeJadwal($jadwal);
         $data = $request->validated();
+        $subTema = SubTema::whereKey($data['sub_tema_id'])->whereHas('tema', fn ($query) => $query->where('status', true))->firstOrFail();
 
         $jadwal->update([
             ...$data,
+            'tema_id' => $subTema->tema_id,
             'guru_id' => $this->guruIdForCurrentUser($data),
         ]);
 
@@ -159,7 +165,7 @@ class JadwalController extends Controller
             'gurus' => $canManageSchedule
                 ? Guru::orderBy('nama')->get(['id', 'nama', 'nip'])
                 : [],
-            'temas' => Tema::active()->orderBy('nama_tema')->get(['id', 'nama_tema']),
+            'subTemas' => SubTema::with('tema:id,nama_tema,thn_ajaran')->whereHas('tema', fn ($query) => $query->where('status', true))->orderBy('nama_sub_tema')->get(['id', 'tema_id', 'nama_sub_tema']),
             'canSelectGuru' => $canManageSchedule,
             'currentGuru' => $canManageSchedule
                 ? null

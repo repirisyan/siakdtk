@@ -14,6 +14,8 @@ interface SiswaForm {
     password: string;
     password_confirmation: string;
     foto_profil: File | null;
+    akta_kelahiran_file: File | null;
+    kartu_keluarga_file: File | null;
     thn_ajaran: string;
     nis: string;
     nisn: string;
@@ -43,6 +45,12 @@ interface SiswaForm {
     pekerjaan_ibu: string;
     penghasilan_ibu: string;
     nama_wali: string;
+    nohp_wali: string;
+    ttl_wali: string;
+    agama_wali: string;
+    pekerjaan_wali: string;
+    penghasilan_wali: string;
+    alamat_wali: string;
     kelas_id: string;
 }
 
@@ -70,6 +78,8 @@ type SiswaField = Exclude<
     | 'password_confirmation'
     | 'thn_ajaran'
     | 'foto_profil'
+    | 'akta_kelahiran_file'
+    | 'kartu_keluarga_file'
 >;
 
 interface Field {
@@ -127,6 +137,12 @@ const fields: Field[] = [
     { name: 'pekerjaan_ibu', label: 'Pekerjaan Ibu' },
     { name: 'penghasilan_ibu', label: 'Penghasilan Ibu' },
     { name: 'nama_wali', label: 'Nama Wali' },
+    { name: 'nohp_wali', label: 'Nomor HP Wali', type: 'tel' },
+    { name: 'ttl_wali', label: 'Tanggal Lahir Wali', type: 'date' },
+    { name: 'agama_wali', label: 'Agama Wali', options: AGAMA_OPTIONS },
+    { name: 'pekerjaan_wali', label: 'Pekerjaan Wali' },
+    { name: 'penghasilan_wali', label: 'Penghasilan Wali' },
+    { name: 'alamat_wali', label: 'Alamat Wali' },
 ];
 
 interface TahunAjaran {
@@ -149,6 +165,8 @@ const emptyForm: SiswaForm = {
     password: '',
     password_confirmation: '',
     foto_profil: null,
+    akta_kelahiran_file: null,
+    kartu_keluarga_file: null,
     thn_ajaran: '',
     nis: '',
     nisn: '',
@@ -178,6 +196,12 @@ const emptyForm: SiswaForm = {
     pekerjaan_ibu: '',
     penghasilan_ibu: '',
     nama_wali: '',
+    nohp_wali: '',
+    ttl_wali: '',
+    agama_wali: '',
+    pekerjaan_wali: '',
+    penghasilan_wali: '',
+    alamat_wali: '',
     kelas_id: '',
 };
 const form = useForm<SiswaForm>({ ...emptyForm });
@@ -225,6 +249,13 @@ const submit = () => {
 const onPhotoChange = (event: Event) => {
     form.foto_profil = (event.target as HTMLInputElement).files?.[0] ?? null;
 };
+
+const onDocumentChange = (
+    field: 'akta_kelahiran_file' | 'kartu_keluarga_file',
+    event: Event,
+) => {
+    form[field] = (event.target as HTMLInputElement).files?.[0] ?? null;
+};
 </script>
 
 <template>
@@ -259,6 +290,50 @@ const onPhotoChange = (event: Event) => {
                                 class="block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
                                 @change="onPhotoChange"
                             /><InputError :message="form.errors.foto_profil" />
+                        </div>
+                        <div class="space-y-2">
+                            <label
+                                for="akta_kelahiran_file"
+                                class="text-sm font-medium"
+                                >Ganti Akta Kelahiran</label
+                            >
+                            <input
+                                id="akta_kelahiran_file"
+                                type="file"
+                                accept=".pdf,.jpg,.jpeg,.png,.webp"
+                                class="block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
+                                @change="
+                                    onDocumentChange(
+                                        'akta_kelahiran_file',
+                                        $event,
+                                    )
+                                "
+                            />
+                            <InputError
+                                :message="form.errors.akta_kelahiran_file"
+                            />
+                        </div>
+                        <div class="space-y-2">
+                            <label
+                                for="kartu_keluarga_file"
+                                class="text-sm font-medium"
+                                >Ganti Kartu Keluarga</label
+                            >
+                            <input
+                                id="kartu_keluarga_file"
+                                type="file"
+                                accept=".pdf,.jpg,.jpeg,.png,.webp"
+                                class="block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
+                                @change="
+                                    onDocumentChange(
+                                        'kartu_keluarga_file',
+                                        $event,
+                                    )
+                                "
+                            />
+                            <InputError
+                                :message="form.errors.kartu_keluarga_file"
+                            />
                         </div>
                         <div class="space-y-2">
                             <label for="name" class="text-sm font-medium"

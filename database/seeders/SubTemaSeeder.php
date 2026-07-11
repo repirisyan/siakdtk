@@ -2,16 +2,17 @@
 
 namespace Database\Seeders;
 
-use App\Models\Tema;
+use App\Models\SubTema;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
-class TemaSeeder extends Seeder
+class SubTemaSeeder extends Seeder
 {
     /**
      * Run the database seeds.
      */
     public function run(): void
     {
-        Tema::factory(4)->create();
+        SubTema::factory(20)->create();
     }
 }

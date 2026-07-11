@@ -5,6 +5,7 @@ namespace Database\Factories;
 use App\Models\Guru;
 use App\Models\Jadwal;
 use App\Models\Kelas;
+use App\Models\SubTema;
 use App\Models\Tema;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -18,21 +19,42 @@ class JadwalFactory extends Factory
      *
      * @return array<string, mixed>
      */
+     protected $model = Jadwal::class;
     public function definition(): array
     {
+        $tema = Tema::inRandomOrder()->first()
+
+            ?? Tema::factory()->create();
+
+        $subTema = SubTema::where('tema_id', $tema->id)
+
+            ->inRandomOrder()
+
+            ->first();
+
+        if (! $subTema) {
+
+            $subTema = SubTema::factory()->create([
+
+                'tema_id' => $tema->id,
+
+            ]);
+
+        }
+
         return [
 
             'kelas_id' => Kelas::inRandomOrder()->value('id')
 
-            ?? Kelas::factory()->create()->id,
+                ?? Kelas::factory()->create()->id,
 
             'guru_id' => Guru::inRandomOrder()->value('id')
 
                 ?? Guru::factory()->create()->id,
 
-            'tema_id' => Tema::inRandomOrder()->value('id')
+            'tema_id' => $tema->id,
 
-                ?? Tema::factory()->create()->id,
+            'sub_tema_id' => $subTema->id,
 
             'tanggal' => $this->faker->date(),
 

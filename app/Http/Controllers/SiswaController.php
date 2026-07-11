@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Notifications\AccountCreatedNotification;
 use App\Notifications\StudentRegistrationNotification;
 use App\Services\ProfilePhotoService;
+use App\Services\StudentDocumentService;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -129,12 +130,12 @@ class SiswaController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(SiswaRequest $request, ProfilePhotoService $profilePhotoService)
+    public function store(SiswaRequest $request, ProfilePhotoService $profilePhotoService, StudentDocumentService $studentDocumentService)
     {
         $data = $request->validated();
         $manager = $this->currentSiswaManager();
 
-        $user = DB::transaction(function () use ($data, $manager, $request, $profilePhotoService) {
+        $user = DB::transaction(function () use ($data, $manager, $request, $profilePhotoService, $studentDocumentService) {
             $roleOrangtua = Role::where('role_name', 'Orangtua Siswa')->firstOrFail();
 
             $user = User::create([
@@ -157,7 +158,15 @@ class SiswaController extends Controller
                     'password_confirmation',
                     'thn_ajaran',
                     'foto_profil',
+                    'akta_kelahiran_file',
+                    'kartu_keluarga_file',
                 ]),
+                'akta_kelahiran_file' => $request->hasFile('akta_kelahiran_file')
+                    ? $studentDocumentService->store($request->file('akta_kelahiran_file'))
+                    : null,
+                'kartu_keluarga_file' => $request->hasFile('kartu_keluarga_file')
+                    ? $studentDocumentService->store($request->file('kartu_keluarga_file'))
+                    : null,
                 'user_id' => $user->id,
                 'tanggal_registrasi' => today(),
                 'status' => 'aktif',
@@ -216,13 +225,13 @@ class SiswaController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(SiswaRequest $request, Siswa $siswa, ProfilePhotoService $profilePhotoService)
+    public function update(SiswaRequest $request, Siswa $siswa, ProfilePhotoService $profilePhotoService, StudentDocumentService $studentDocumentService)
     {
         $data = $request->validated();
         $this->currentSiswaManager();
         $siswa->load('user');
 
-        DB::transaction(function () use ($data, $siswa, $request, $profilePhotoService) {
+        DB::transaction(function () use ($data, $siswa, $request, $profilePhotoService, $studentDocumentService) {
             $userData = Arr::only($data, ['name', 'email']);
 
             if ($data['password']) {
@@ -237,14 +246,26 @@ class SiswaController extends Controller
             }
 
             $siswa->user->update($userData);
-            $siswa->update(Arr::except($data, [
+            $siswaData = Arr::except($data, [
                 'name',
                 'email',
                 'password',
                 'password_confirmation',
                 'thn_ajaran',
                 'foto_profil',
-            ]));
+                'akta_kelahiran_file',
+                'kartu_keluarga_file',
+            ]);
+
+            if ($request->hasFile('akta_kelahiran_file')) {
+                $siswaData['akta_kelahiran_file'] = $studentDocumentService->store($request->file('akta_kelahiran_file'));
+            }
+
+            if ($request->hasFile('kartu_keluarga_file')) {
+                $siswaData['kartu_keluarga_file'] = $studentDocumentService->store($request->file('kartu_keluarga_file'));
+            }
+
+            $siswa->update($siswaData);
         });
 
         return redirect()
@@ -293,8 +314,6 @@ class SiswaController extends Controller
             $siswa->update([
                 'status' => 'aktif',
                 'kelas_id' => $data['kelas_id'],
-                'nis' => $data['nis'],
-                'nisn' => $data['nisn'],
                 'approved_by' => $manager->id,
                 'approved_at' => now(),
             ]);

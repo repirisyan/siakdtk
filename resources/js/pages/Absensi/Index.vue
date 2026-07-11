@@ -129,6 +129,16 @@ const submitTidakHadir = () => {
     submitAbsen(selectedSiswa.value, absenForm.status, absenForm.keterangan);
 };
 
+const undoAbsen = (absen: Absen, siswa: Siswa) => {
+    if (!window.confirm(`Batalkan absensi ${siswa.nama}?`)) {
+        return;
+    }
+
+    router.delete(AbsenController.destroy(absen.id).url, {
+        preserveScroll: true,
+    });
+};
+
 const columns: ColumnDef<Siswa>[] = [
     { accessorKey: 'nama', header: 'Nama Siswa' },
     { accessorKey: 'nis', header: 'NIS' },
@@ -266,8 +276,18 @@ const table = useVueTable({
                                     >Tidak Hadir</Button
                                 >
                             </div>
-                            <span v-else class="text-sm text-muted-foreground"
-                                >Sudah tercatat</span
+                            <Button
+                                v-else
+                                type="button"
+                                variant="outline"
+                                :disabled="absenForm.processing"
+                                @click="
+                                    undoAbsen(
+                                        statusFor(row.original)!,
+                                        row.original,
+                                    )
+                                "
+                                >Batalkan Absensi</Button
                             >
                         </td>
                     </tr>

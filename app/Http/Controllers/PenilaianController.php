@@ -49,7 +49,7 @@ class PenilaianController extends Controller
 
     public function getJadwal(User $user, int $kelasId)
     {
-        return Jadwal::with(['guru:id,nama,nip', 'tema:id,nama_tema'])
+        return Jadwal::with(['guru:id,nama,nip', 'tema:id,nama_tema', 'subTema:id,tema_id,nama_sub_tema'])
             ->where('kelas_id', $kelasId)
             ->when($user->hasRole('Guru'), function ($query) use ($user) {
                 $query->where('guru_id', $user->guru->id);
@@ -126,7 +126,7 @@ class PenilaianController extends Controller
 
     private function authorizeJadwal(User $user, int $jadwalId): Jadwal
     {
-        $jadwal = Jadwal::with(['guru:id,nama,nip', 'kelas:id,nama_kelas,thn_ajaran', 'tema:id,nama_tema'])
+        $jadwal = Jadwal::with(['guru:id,nama,nip', 'kelas:id,nama_kelas,thn_ajaran', 'tema:id,nama_tema', 'subTema:id,tema_id,nama_sub_tema'])
             ->findOrFail($jadwalId);
 
         if ($user->hasRole('Guru')) {

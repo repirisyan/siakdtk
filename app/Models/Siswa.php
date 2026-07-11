@@ -40,6 +40,14 @@ class Siswa extends Model
         'pekerjaan_ibu',
         'penghasilan_ibu',
         'nama_wali',
+        'nohp_wali',
+        'ttl_wali',
+        'agama_wali',
+        'pekerjaan_wali',
+        'penghasilan_wali',
+        'alamat_wali',
+        'akta_kelahiran_file',
+        'kartu_keluarga_file',
         'kelas_id',
         'user_id',
         'tanggal_registrasi',
@@ -53,6 +61,7 @@ class Siswa extends Model
         return [
             'tanggal_registrasi' => 'date',
             'approved_at' => 'datetime',
+            'ttl_wali' => 'date',
         ];
     }
 
