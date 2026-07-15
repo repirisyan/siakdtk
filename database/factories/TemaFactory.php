@@ -18,7 +18,6 @@ class TemaFactory extends Factory
     protected $model = Tema::class;
 
     public function definition(): array
-
     {
 
         return [
@@ -54,6 +53,8 @@ class TemaFactory extends Factory
                 now()->year + 1
 
             ),
+
+            'status' => true,
 
         ];
 

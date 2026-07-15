@@ -2,16 +2,20 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Rapor extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'user_id',
         'siswa_id',
         'guru_id',
         'tema_id',
+        'sub_tema_id',
         'keterangan',
         'status',
         'validated_by',
@@ -40,6 +44,11 @@ class Rapor extends Model
     public function tema(): BelongsTo
     {
         return $this->belongsTo(Tema::class, 'tema_id');
+    }
+
+    public function subTema(): BelongsTo
+    {
+        return $this->belongsTo(SubTema::class);
     }
 
     public function guru(): BelongsTo

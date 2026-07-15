@@ -32,14 +32,16 @@ class SppRequest extends FormRequest
                 'required',
                 'digits:4',
             ],
-            'jenis_pembayaran' => ['required', 'string', 'max:100'],
+            'jenis_pembayaran_id' => ['required', 'integer', Rule::exists('jenis_pembayarans', 'id')->where('status', true)],
             'tanggal_tagihan' => [
                 'required',
                 'date',
-                Rule::unique('spps', 'tanggal_tagihan')
+                Rule::unique('pembayarans', 'tanggal_tagihan')
                     ->where(fn ($query) => $query
                         ->where('siswa_id', $this->input('siswa_id'))
-                        ->where('jenis_pembayaran', $this->input('jenis_pembayaran')))
+                        ->where('jenis_pembayaran', function ($query) {
+                            $query->select('nama_jenis')->from('jenis_pembayarans')->where('id', $this->input('jenis_pembayaran_id'));
+                        }))
                     ->ignore($spp),
             ],
             'jatuh_tempo' => ['required', 'date', 'after_or_equal:tanggal_tagihan'],

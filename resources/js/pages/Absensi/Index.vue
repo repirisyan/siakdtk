@@ -48,6 +48,7 @@ const page = usePage();
 const kelas = computed(() => page.props.kelas as Kelas[]);
 const jadwals = computed(() => page.props.jadwals as Jadwal[]);
 const siswas = computed(() => page.props.siswas as Siswa[]);
+const lockedSiswaIds = computed(() => page.props.lockedSiswaIds as number[]);
 const filters = computed(
     () =>
         page.props.filters as {
@@ -98,6 +99,7 @@ const changeKelas = () => {
 const changeJadwal = () => loadData(selectedKelas.value, selectedJadwal.value);
 
 const statusFor = (siswa: Siswa) => siswa.absens[0] ?? null;
+const isLocked = (siswa: Siswa) => lockedSiswaIds.value.includes(siswa.id);
 
 const submitAbsen = (siswa: Siswa, status: StatusAbsen, keterangan = '') => {
     absenForm.kelas_id = selectedKelas.value;
@@ -262,7 +264,13 @@ const table = useVueTable({
                         </td>
                         <td class="px-4 py-3">
                             <div
-                                v-if="!statusFor(row.original)"
+                                v-if="isLocked(row.original)"
+                                class="text-sm text-muted-foreground"
+                            >
+                                Terkunci setelah Rapor Akhir disetujui
+                            </div>
+                            <div
+                                v-else-if="!statusFor(row.original)"
                                 class="flex gap-2"
                             >
                                 <Button

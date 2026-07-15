@@ -14,7 +14,13 @@ defineProps<{
     items: NavItem[];
 }>();
 
-const { isCurrentUrl } = useCurrentUrl();
+const { currentUrl, isCurrentUrl } = useCurrentUrl();
+
+const isActive = (item: NavItem) =>
+    isCurrentUrl(item.href) ||
+    item.activePrefixes?.some((prefix) =>
+        isCurrentUrl(prefix, currentUrl.value, true),
+    );
 </script>
 
 <template>
@@ -27,7 +33,7 @@ const { isCurrentUrl } = useCurrentUrl();
             <SidebarMenuItem v-for="item in items" :key="item.title">
                 <SidebarMenuButton
                     as-child
-                    :is-active="isCurrentUrl(item.href)"
+                    :is-active="isActive(item)"
                     :tooltip="item.title"
                 >
                     <Link :href="item.href">

@@ -25,7 +25,7 @@ class GenerateSppRequest extends FormRequest
             'target' => ['required', 'in:kelas,tahun_ajaran'],
             'kelas_id' => ['nullable', 'required_if:target,kelas', 'integer', 'exists:kelas,id'],
             'thn_ajaran' => ['nullable', 'required_if:target,tahun_ajaran', 'digits:4', 'exists:kelas,thn_ajaran'],
-            'jenis_pembayaran' => ['required', 'string', 'max:100'],
+            'jenis_pembayaran_id' => ['required', 'integer', 'exists:jenis_pembayarans,id,status,1'],
             'nominal' => ['required', 'numeric', 'min:0.01'],
             'tanggal_tagihan' => ['required', 'date'],
             'jatuh_tempo' => ['required', 'date', 'after_or_equal:tanggal_tagihan'],

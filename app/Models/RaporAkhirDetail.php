@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class RaporAkhirDetail extends Model
 {
+    use HasFactory;
+
     protected $fillable = ['rapor_akhir_id', 'tema_id', 'guru_id', 'keterangan'];
 
     public function raporAkhir(): BelongsTo

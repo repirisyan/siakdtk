@@ -15,36 +15,25 @@ class UserSeeder extends Seeder
     public function run(): void
     {
 
-        $adminRole = Role::where('role_name', 'Admin')->first();
+        collect([
+            ['name' => 'Administrator', 'email' => 'admin@siakdtk.test', 'role' => 'Admin'],
+            ['name' => 'Staff Akademik', 'email' => 'akademik@siakdtk.test', 'role' => 'Staff Akademik'],
+            ['name' => 'Staff Administrasi', 'email' => 'administrasi@siakdtk.test', 'role' => 'Staff Administrasi'],
+            ['name' => 'Kepala Sekolah', 'email' => 'kepsek@siakdtk.test', 'role' => 'Kepsek'],
+        ])->each(function (array $account): void {
+            $role = Role::where('role_name', $account['role'])->firstOrFail();
 
-        if (! $adminRole) {
-
-            return;
-
-        }
-
-        User::firstOrCreate(
-
-            [
-
-                'email' => 'admin@siakdtk.com',
-                'email_verified_at' => now(),
-
-            ],
-
-            [
-
-                'role_id' => $adminRole->id,
-
-                'name' => 'Administrator',
-
-                'password' => Hash::make('password'),
-
-                'status' => true,
-
-            ]
-
-        );
+            User::updateOrCreate(
+                ['email' => $account['email']],
+                [
+                    'name' => $account['name'],
+                    'role_id' => $role->id,
+                    'password' => Hash::make('password'),
+                    'email_verified_at' => now(),
+                    'status' => true,
+                ],
+            );
+        });
 
     }
 }

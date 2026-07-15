@@ -5,7 +5,9 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmailVerificationController;
 use App\Http\Controllers\GuruController;
 use App\Http\Controllers\JadwalController;
+use App\Http\Controllers\JenisPembayaranController;
 use App\Http\Controllers\KelasController;
+use App\Http\Controllers\KomponenPenilaianController;
 use App\Http\Controllers\KontenController;
 use App\Http\Controllers\KontenGaleriController;
 use App\Http\Controllers\LandingPageController;
@@ -48,6 +50,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('tambah-anak', [StudentRegistrationController::class, 'storeAdditional'])->name('anak.store');
     Route::resource('tema', TemaController::class);
     Route::resource('sub-tema', SubTemaController::class);
+    Route::resource('komponen-penilaian', KomponenPenilaianController::class)
+        ->only(['index', 'create', 'store', 'edit', 'update', 'destroy'])
+        ->parameters(['komponen-penilaian' => 'komponenPenilaian']);
     Route::patch('tema/{tema}/toggle-status', [TemaController::class, 'toggleStatus'])->name('tema.toggle-status');
     Route::resource('users', UserController::class);
     Route::patch('users/{user}/toggle-status', [UserController::class, 'toggleStatus'])
@@ -60,6 +65,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('users.resend-verification-email');
     Route::resource('siswa', SiswaController::class);
     Route::resource('spp', SppController::class);
+    Route::resource('jenis-pembayaran', JenisPembayaranController::class)
+        ->except(['show']);
     Route::resource('konten', KontenController::class);
     Route::post('konten/{konten}/galeri', [KontenGaleriController::class, 'store'])
         ->name('konten.galeri.store');
@@ -112,6 +119,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('hasil-akhir-rapor/{raporAkhir}/approve', [RaporAkhirController::class, 'approve'])->name('rapor-akhir.approve');
     Route::post('hasil-akhir-rapor/{raporAkhir}/reject', [RaporAkhirController::class, 'reject'])->name('rapor-akhir.reject');
     Route::post('hasil-akhir-rapor/approve-all', [RaporAkhirController::class, 'approveAll'])->name('rapor-akhir.approve-all');
+    Route::get('hasil-akhir-rapor/kelas/{kelas}/cetak', [RaporAkhirController::class, 'printClass'])->name('rapor-akhir.print-class');
+    Route::get('hasil-akhir-rapor/{raporAkhir}/cetak', [RaporAkhirController::class, 'printStudent'])->name('rapor-akhir.print-student');
     Route::resource('rapor-anak', RaporAnakController::class)
         ->parameters(['rapor-anak' => 'rapor'])
         ->only(['index', 'show']);

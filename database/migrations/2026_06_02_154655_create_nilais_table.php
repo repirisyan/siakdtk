@@ -15,7 +15,7 @@ return new class extends Migration
         Schema::create('nilais', function (Blueprint $table) {
             $table->id();
             $table->char('nilai', 5);
-            $table->foreignIdFor(Absen::class, 'absen_id');
+            $table->foreignIdFor(Absen::class, 'absen_id')->constrained();
             $table->text('keterangan')->nullable();
             $table->text('foto_kegiatan')->nullable();
             $table->timestamps();

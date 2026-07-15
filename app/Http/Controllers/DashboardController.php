@@ -110,7 +110,7 @@ class DashboardController extends Controller
             'stats' => [
                 'total_anak' => $siswas->count(),
                 'total_tagihan_aktif' => (clone $sppQuery)
-                    ->whereRaw("(SELECT COALESCE(SUM(jumlah_bayar), 0) FROM spp_pembayarans WHERE spp_pembayarans.spp_id = spps.id AND status_verifikasi = 'approved') < spps.nominal")
+                    ->whereRaw("(SELECT COALESCE(SUM(jumlah_bayar), 0) FROM detail_pembayarans WHERE detail_pembayarans.pembayaran_id = pembayarans.id AND status_verifikasi = 'approved') < pembayarans.nominal")
                     ->count(),
                 'total_tunggakan' => max($totalTagihan - $totalDibayar, 0),
                 'total_pembayaran_tahun_ini' => (float) SppPembayaran::whereHas('spp', fn ($query) => $query->whereIn('siswa_id', $siswaIds))

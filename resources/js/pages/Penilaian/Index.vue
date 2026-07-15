@@ -27,19 +27,27 @@ interface Jadwal {
 type StatusAbsen = 'hadir' | 'izin' | 'sakit' | 'alfa';
 interface Nilai {
     id: number;
+    komponen_penilaian_id: number;
     nilai: string;
     keterangan: string | null;
+    komponen_penilaian: { nama_komponen: string } | null;
+}
+interface KomponenPenilaian {
+    id: number;
+    nama_komponen: string;
+    deskripsi: string | null;
 }
 interface Absen {
     id: number;
     status: StatusAbsen;
     siswa: { id: number; nama: string; nis: string | null };
-    nilai: Nilai | null;
+    nilais: Nilai[];
 }
 interface PenilaianForm {
     kelas_id: string;
     jadwal_id: string;
     absen_id: string;
+    komponen_penilaian_id: string;
     nilai: string;
     keterangan: string;
 }
@@ -48,6 +56,10 @@ const page = usePage();
 const kelas = computed(() => page.props.kelas as Kelas[]);
 const jadwals = computed(() => page.props.jadwals as Jadwal[]);
 const absens = computed(() => page.props.absens as Absen[]);
+const komponenPenilaians = computed(
+    () => page.props.komponenPenilaians as KomponenPenilaian[],
+);
+const lockedSiswaIds = computed(() => page.props.lockedSiswaIds as number[]);
 const filters = computed(
     () =>
         page.props.filters as {
@@ -69,6 +81,7 @@ const nilaiForm = useForm<PenilaianForm>({
     kelas_id: selectedKelas.value,
     jadwal_id: selectedJadwal.value,
     absen_id: '',
+    komponen_penilaian_id: '',
     nilai: '',
     keterangan: '',
 });
@@ -94,12 +107,32 @@ const changeKelas = () => {
     loadData(selectedKelas.value);
 };
 const changeJadwal = () => loadData(selectedKelas.value, selectedJadwal.value);
-const canAssess = (absen: Absen) => absen.status === 'hadir' && !absen.nilai;
+const isLocked = (absen: Absen) =>
+    lockedSiswaIds.value.includes(absen.siswa.id);
+const canAssess = (absen: Absen) =>
+    !isLocked(absen) &&
+    absen.status === 'hadir' &&
+    komponenPenilaians.value.length > 0;
+const selectedNilai = computed(() =>
+    selectedAbsen.value?.nilais.find(
+        (nilai) =>
+            nilai.komponen_penilaian_id ===
+            Number(nilaiForm.komponen_penilaian_id),
+    ),
+);
 const openModal = (absen: Absen) => {
     selectedAbsen.value = absen;
     nilaiForm.nilai = '';
     nilaiForm.keterangan = '';
+    nilaiForm.komponen_penilaian_id = '';
 };
+watch(
+    () => nilaiForm.komponen_penilaian_id,
+    () => {
+        nilaiForm.nilai = selectedNilai.value?.nilai ?? '';
+        nilaiForm.keterangan = selectedNilai.value?.keterangan ?? '';
+    },
+);
 const submitNilai = () => {
     if (!selectedAbsen.value) {
         return;
@@ -112,7 +145,12 @@ const submitNilai = () => {
         preserveScroll: true,
         onSuccess: () => {
             selectedAbsen.value = null;
-            nilaiForm.reset('absen_id', 'nilai', 'keterangan');
+            nilaiForm.reset(
+                'absen_id',
+                'komponen_penilaian_id',
+                'nilai',
+                'keterangan',
+            );
         },
     });
 };
@@ -121,9 +159,14 @@ const columns: ColumnDef<Absen>[] = [
     { accessorFn: (row) => row.siswa.nama, id: 'nama', header: 'Nama Siswa' },
     { accessorFn: (row) => row.siswa.nis, id: 'nis', header: 'NIS' },
     { accessorKey: 'status', header: 'Status Absensi' },
-    { accessorFn: (row) => row.nilai?.nilai, id: 'nilai', header: 'Nilai' },
     {
-        accessorFn: (row) => row.nilai?.keterangan,
+        accessorFn: (row) => row.nilais.map((nilai) => nilai.nilai).join(', '),
+        id: 'nilai',
+        header: 'Nilai',
+    },
+    {
+        accessorFn: (row) =>
+            row.nilais.map((nilai) => nilai.keterangan).join(', '),
         id: 'keterangan',
         header: 'Keterangan',
     },
@@ -258,23 +301,57 @@ const table = useVueTable({
                             >
                         </td>
                         <td class="px-4 py-3">
-                            {{ row.original.nilai?.nilai ?? '-' }}
+                            <div
+                                v-if="row.original.nilais.length"
+                                class="space-y-1"
+                            >
+                                <p
+                                    v-for="nilai in row.original.nilais"
+                                    :key="nilai.id"
+                                    class="text-sm"
+                                >
+                                    <span class="text-muted-foreground"
+                                        >{{
+                                            nilai.komponen_penilaian
+                                                ?.nama_komponen ?? 'Komponen'
+                                        }}:</span
+                                    >
+                                    {{ nilai.nilai }}
+                                </p>
+                            </div>
+                            <span v-else>-</span>
                         </td>
                         <td class="px-4 py-3">
-                            {{ row.original.nilai?.keterangan ?? '-' }}
+                            <div
+                                v-if="row.original.nilais.length"
+                                class="space-y-1"
+                            >
+                                <p
+                                    v-for="nilai in row.original.nilais"
+                                    :key="nilai.id"
+                                    class="max-w-xs text-sm text-muted-foreground"
+                                >
+                                    {{ nilai.keterangan ?? '-' }}
+                                </p>
+                            </div>
+                            <span v-else>-</span>
                         </td>
                         <td class="px-4 py-3">
                             <Button
                                 v-if="canAssess(row.original)"
                                 :disabled="nilaiForm.processing"
                                 @click="openModal(row.original)"
-                                >Berikan Nilai</Button
+                                >Kelola Nilai</Button
                             ><span
-                                v-else-if="row.original.nilai"
+                                v-else
                                 class="text-sm text-muted-foreground"
-                                >Sudah dinilai</span
-                            ><span v-else class="text-sm text-muted-foreground"
-                                >Tidak dapat dinilai</span
+                                >{{
+                                    row.original.status === 'hadir'
+                                        ? isLocked(row.original)
+                                            ? 'Terkunci setelah Rapor Akhir disetujui'
+                                            : 'Komponen belum tersedia'
+                                        : 'Tidak dapat dinilai'
+                                }}</span
                             >
                         </td>
                     </tr>
@@ -298,12 +375,45 @@ const table = useVueTable({
                 class="w-full max-w-md rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm"
             >
                 <div class="space-y-1">
-                    <h2 class="text-lg font-semibold">Berikan Nilai</h2>
+                    <h2 class="text-lg font-semibold">
+                        {{ selectedNilai ? 'Edit Nilai' : 'Berikan Nilai' }}
+                    </h2>
                     <p class="text-sm text-muted-foreground">
                         {{ selectedAbsen.siswa.nama }}
                     </p>
                 </div>
                 <form class="mt-6 space-y-4" @submit.prevent="submitNilai">
+                    <div class="space-y-2">
+                        <label
+                            for="komponen_penilaian_id"
+                            class="text-sm font-medium"
+                            >Komponen Penilaian</label
+                        >
+                        <select
+                            id="komponen_penilaian_id"
+                            v-model="nilaiForm.komponen_penilaian_id"
+                            required
+                            class="h-9 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground"
+                        >
+                            <option value="">Pilih komponen</option>
+                            <option
+                                v-for="komponen in komponenPenilaians"
+                                :key="komponen.id"
+                                :value="String(komponen.id)"
+                            >
+                                {{ komponen.nama_komponen }}
+                            </option>
+                        </select>
+                        <InputError
+                            :message="nilaiForm.errors.komponen_penilaian_id"
+                        />
+                        <p
+                            v-if="selectedNilai"
+                            class="text-xs text-muted-foreground"
+                        >
+                            Nilai sebelumnya dimuat dan dapat diperbarui.
+                        </p>
+                    </div>
                     <div class="space-y-2">
                         <label for="nilai" class="text-sm font-medium"
                             >Nilai</label

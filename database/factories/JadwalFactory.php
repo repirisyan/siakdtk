@@ -19,42 +19,18 @@ class JadwalFactory extends Factory
      *
      * @return array<string, mixed>
      */
-     protected $model = Jadwal::class;
+    protected $model = Jadwal::class;
+
     public function definition(): array
     {
-        $tema = Tema::inRandomOrder()->first()
-
-            ?? Tema::factory()->create();
-
-        $subTema = SubTema::where('tema_id', $tema->id)
-
-            ->inRandomOrder()
-
-            ->first();
-
-        if (! $subTema) {
-
-            $subTema = SubTema::factory()->create([
-
-                'tema_id' => $tema->id,
-
-            ]);
-
-        }
-
         return [
+            'kelas_id' => Kelas::factory(),
 
-            'kelas_id' => Kelas::inRandomOrder()->value('id')
+            'guru_id' => Guru::factory(),
 
-                ?? Kelas::factory()->create()->id,
+            'tema_id' => Tema::factory(),
 
-            'guru_id' => Guru::inRandomOrder()->value('id')
-
-                ?? Guru::factory()->create()->id,
-
-            'tema_id' => $tema->id,
-
-            'sub_tema_id' => $subTema->id,
+            'sub_tema_id' => SubTema::factory(),
 
             'tanggal' => $this->faker->date(),
 
@@ -81,5 +57,12 @@ class JadwalFactory extends Factory
             ]),
 
         ];
+    }
+
+    public function configure(): static
+    {
+        return $this->afterCreating(function (Jadwal $jadwal): void {
+            $jadwal->update(['tema_id' => $jadwal->subTema()->value('tema_id')]);
+        });
     }
 }

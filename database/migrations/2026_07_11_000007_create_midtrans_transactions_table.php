@@ -12,7 +12,7 @@ return new class extends Migration
     {
         Schema::create('midtrans_transactions', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(Spp::class, 'spp_id')->constrained('spps')->cascadeOnDelete();
+            $table->foreignIdFor(Spp::class, 'spp_id')->constrained('pembayarans')->cascadeOnDelete();
             $table->foreignIdFor(User::class, 'user_id')->constrained('users')->cascadeOnDelete();
             $table->string('order_id')->unique();
             $table->string('transaction_id')->nullable()->unique();

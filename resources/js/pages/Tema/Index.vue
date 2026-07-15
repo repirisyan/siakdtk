@@ -19,6 +19,7 @@ interface Tema {
     nama_tema: string;
     created_at: string;
     status: boolean;
+    sub_temas_count: number;
 }
 
 interface PaginationLink {
@@ -105,6 +106,10 @@ const createTema = () => {
 
 const editTema = (id: number) => {
     router.visit(TemaController.edit(id).url);
+};
+
+const manageSubTema = (id: number) => {
+    router.visit(`/sub-tema?tema_id=${id}`);
 };
 
 const deleteTema = (id: number) => {
@@ -257,6 +262,13 @@ const table = useVueTable({
                                     @click="editTema(row.original.id)"
                                 >
                                     Edit
+                                </Button>
+
+                                <Button
+                                    variant="outline"
+                                    @click="manageSubTema(row.original.id)"
+                                >
+                                    Kelola Sub Tema
                                 </Button>
 
                                 <Button

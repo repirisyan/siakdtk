@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class RaporAkhir extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'siswa_id', 'kelas_id', 'thn_ajaran', 'status', 'approved_by',
         'approved_at', 'rejected_by', 'rejected_at', 'catatan_penolakan',

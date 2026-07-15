@@ -2,13 +2,18 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class SppPembayaran extends Model
 {
+    use HasFactory;
+
+    protected $table = 'detail_pembayarans';
+
     protected $fillable = [
-        'spp_id',
+        'pembayaran_id',
         'tanggal_bayar',
         'jumlah_bayar',
         'metode_pembayaran',
@@ -31,7 +36,7 @@ class SppPembayaran extends Model
 
     public function spp(): BelongsTo
     {
-        return $this->belongsTo(Spp::class);
+        return $this->belongsTo(Spp::class, 'pembayaran_id');
     }
 
     public function receiver(): BelongsTo

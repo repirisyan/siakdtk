@@ -9,7 +9,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('spps', function (Blueprint $table) {
+        Schema::create('pembayarans', function (Blueprint $table) {
             $table->id();
             $table->foreignIdFor(Siswa::class, 'siswa_id')->constrained('siswas')->cascadeOnDelete();
             $table->year('thn_ajaran');
@@ -23,6 +23,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('spps');
+        Schema::dropIfExists('pembayarans');
     }
 };

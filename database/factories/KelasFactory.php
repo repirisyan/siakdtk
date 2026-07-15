@@ -19,13 +19,7 @@ class KelasFactory extends Factory
     {
         return [
 
-            'nama_kelas' => 'TK '.$this->faker->randomElement([
-
-                'A',
-
-                'B',
-
-            ]),
+            'nama_kelas' => 'TK '.$this->faker->unique()->bothify('??-##'),
 
             'thn_ajaran' => $this->faker->numberBetween(
 
@@ -34,6 +28,8 @@ class KelasFactory extends Factory
                 2030
 
             ),
+
+            'status' => true,
 
         ];
     }

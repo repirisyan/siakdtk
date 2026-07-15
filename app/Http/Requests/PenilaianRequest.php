@@ -27,6 +27,7 @@ class PenilaianRequest extends FormRequest
             'kelas_id' => ['required', 'integer', 'exists:kelas,id'],
             'jadwal_id' => ['required', 'integer', 'exists:jadwals,id'],
             'absen_id' => ['required', 'integer', 'exists:absens,id'],
+            'komponen_penilaian_id' => ['required', 'integer', 'exists:komponen_penilaians,id'],
             'nilai' => ['required', 'string', 'max:5'],
             'keterangan' => ['nullable', 'string'],
         ];

@@ -9,6 +9,7 @@ use App\Http\Requests\RaporSubmitRequest;
 use App\Models\Kelas;
 use App\Models\Rapor;
 use App\Models\Siswa;
+use App\Models\SubTema;
 use App\Models\Tema;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -38,6 +39,7 @@ class RaporController extends Controller
             $rapors = Rapor::with([
                 'siswa:id,user_id,kelas_id,nama,nis',
                 'tema:id,nama_tema',
+                'subTema:id,tema_id,nama_sub_tema',
                 'guru:id,nama,nip',
                 'validator:id,name,email',
             ])
@@ -54,7 +56,8 @@ class RaporController extends Controller
                 : null,
             'temas' => $selectedKelas
                 ? Tema::where('thn_ajaran', $selectedKelas->thn_ajaran)
-                    ->whereHas('jadwal', fn ($query) => $query->where('kelas_id', $selectedKelas->id))
+                    ->whereHas('subTemas.jadwals', fn ($query) => $query->where('kelas_id', $selectedKelas->id))
+                    ->with(['subTemas' => fn ($query) => $query->whereHas('jadwals', fn ($jadwal) => $jadwal->where('kelas_id', $selectedKelas->id))->orderBy('nama_sub_tema')])
                     ->orderBy('nama_tema')
                     ->get(['id', 'nama_tema', 'thn_ajaran'])
                 : collect(),
@@ -74,6 +77,7 @@ class RaporController extends Controller
         $kelas = $this->authorizeKelas($user, (int) $data['kelas_id']);
 
         abort_unless($kelas->status && Tema::active()->whereKey($data['tema_id'])->exists(), 403);
+        abort_unless(SubTema::whereKey($data['sub_tema_id'])->where('tema_id', $data['tema_id'])->whereHas('jadwals', fn ($query) => $query->where('kelas_id', $kelas->id))->exists(), 403);
 
         $this->authorizeStudent((int) $data['siswa_id'], $kelas->id);
         abort_unless((int) $data['thn_ajaran'] === (int) $kelas->thn_ajaran, 403);
@@ -84,6 +88,7 @@ class RaporController extends Controller
                 'user_id' => $data['user_id'],
                 'siswa_id' => $data['siswa_id'],
                 'tema_id' => $data['tema_id'],
+                'sub_tema_id' => $data['sub_tema_id'],
                 'thn_ajaran' => $kelas->thn_ajaran,
             ];
             $existing = Rapor::where($attributes)->first();
@@ -120,6 +125,7 @@ class RaporController extends Controller
         abort_unless(
             $rapor->siswa_id === (int) $data['siswa_id']
                 && $rapor->tema_id === (int) $data['tema_id']
+                && $rapor->sub_tema_id === (int) $data['sub_tema_id']
                 && (int) $rapor->thn_ajaran === (int) $kelas->thn_ajaran,
             403,
         );

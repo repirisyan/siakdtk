@@ -32,8 +32,10 @@ interface RaporAkhir {
     details: Detail[];
 }
 interface Reference {
+    id: number;
     nilai: string;
     keterangan: string | null;
+    komponen_penilaian: { nama_komponen: string } | null;
     absen: {
         siswa: { id: number };
         jadwal: { tema_id: number; sub_tema: { nama_sub_tema: string } | null };
@@ -153,6 +155,17 @@ const approveAll = () => {
         { preserveScroll: true },
     );
 };
+const printClass = () => {
+    if (selectedKelasData.value) {
+        window.open(
+            `/hasil-akhir-rapor/kelas/${selectedKelasData.value.id}/cetak`,
+            '_blank',
+        );
+    }
+};
+const printStudent = (rapor: RaporAkhir) => {
+    window.open(`/hasil-akhir-rapor/${rapor.id}/cetak`, '_blank');
+};
 const referenceFor = () =>
     !modal.value
         ? []
@@ -161,6 +174,39 @@ const referenceFor = () =>
                   item.absen.siswa.id === modal.value?.siswa.id &&
                   item.absen.jadwal.tema_id === modal.value?.tema.id,
           );
+const generateDescription = () => {
+    if (!modal.value) return;
+
+    const referencesBySubTema = referenceFor().reduce<Map<string, Reference[]>>(
+        (groups, reference) => {
+            const subTema =
+                reference.absen.jadwal.sub_tema?.nama_sub_tema ?? 'Sub Tema';
+            groups.set(subTema, [...(groups.get(subTema) ?? []), reference]);
+
+            return groups;
+        },
+        new Map(),
+    );
+
+    form.keterangan = Array.from(referencesBySubTema.entries())
+        .map(([subTema, subTemaReferences]) => {
+            const components = subTemaReferences
+                .map((reference) => {
+                    const komponen =
+                        reference.komponen_penilaian?.nama_komponen ??
+                        'komponen penilaian';
+                    const catatan = reference.keterangan
+                        ? ` ${reference.keterangan}`
+                        : '';
+
+                    return `${komponen} memperoleh nilai ${reference.nilai}.${catatan}`;
+                })
+                .join(' ');
+
+            return `${modal.value?.siswa.nama} menunjukkan perkembangan yang baik pada Sub Tema ${subTema}. ${components}`;
+        })
+        .join('\n\n');
+};
 </script>
 
 <template>
@@ -172,8 +218,11 @@ const referenceFor = () =>
                 Catatan resmi per tema dengan referensi penilaian Sub Tema.
             </p>
         </div>
-        <div v-if="canApprove && selectedKelasData" class="flex justify-end">
-            <Button @click="approveAll">Setujui Semua</Button>
+        <div v-if="selectedKelasData" class="flex flex-wrap justify-end gap-2">
+            <Button variant="outline" @click="printClass"
+                >Cetak Rapor Kelas</Button
+            >
+            <Button v-if="canApprove" @click="approveAll">Setujui Semua</Button>
         </div>
         <div
             class="grid gap-4 rounded-xl border border-border bg-card p-6 text-card-foreground md:grid-cols-2"
@@ -299,6 +348,15 @@ const referenceFor = () =>
                                     @click="reject(raporFor(siswa)!)"
                                     >Tolak</Button
                                 >
+                                <Button
+                                    v-if="
+                                        raporFor(siswa)?.status === 'disetujui'
+                                    "
+                                    size="sm"
+                                    variant="outline"
+                                    @click="printStudent(raporFor(siswa)!)"
+                                    >Cetak Rapor</Button
+                                >
                             </div>
                         </td>
                     </tr>
@@ -328,7 +386,7 @@ const referenceFor = () =>
                     <div v-if="referenceFor().length" class="mt-3 space-y-3">
                         <div
                             v-for="item in referenceFor()"
-                            :key="item.nilai + (item.keterangan ?? '')"
+                            :key="item.id"
                             class="text-sm"
                         >
                             <p class="font-medium">
@@ -337,6 +395,13 @@ const referenceFor = () =>
                                     'Sub Tema'
                                 }}
                                 · Nilai {{ item.nilai }}
+                            </p>
+                            <p class="text-muted-foreground">
+                                Komponen:
+                                {{
+                                    item.komponen_penilaian?.nama_komponen ??
+                                    '-'
+                                }}
                             </p>
                             <p class="text-muted-foreground">
                                 {{ item.keterangan ?? 'Tidak ada catatan.' }}
@@ -348,9 +413,23 @@ const referenceFor = () =>
                     </p>
                 </div>
                 <form class="mt-5 space-y-3" @submit.prevent="submit">
-                    <label class="text-sm font-medium"
-                        >Catatan Perkembangan Tema</label
-                    ><textarea
+                    <div
+                        class="flex flex-wrap items-center justify-between gap-2"
+                    >
+                        <label class="text-sm font-medium"
+                            >Catatan Perkembangan Tema</label
+                        >
+                        <Button
+                            v-if="canManage"
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            :disabled="!referenceFor().length"
+                            @click="generateDescription"
+                            >Generate dari Penilaian</Button
+                        >
+                    </div>
+                    <textarea
                         v-model="form.keterangan"
                         :readonly="!canManage"
                         required

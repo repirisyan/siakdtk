@@ -15,10 +15,13 @@ interface Siswa {
 }
 const page = usePage();
 const siswas = computed(() => page.props.siswas as Siswa[]);
+const jenisPembayarans = computed(
+    () => page.props.jenisPembayarans as { id: number; nama_jenis: string }[],
+);
 const form = useForm({
     siswa_id: '',
     thn_ajaran: '',
-    jenis_pembayaran: 'SPP',
+    jenis_pembayaran_id: '',
     tanggal_tagihan: '',
     jatuh_tempo: '',
     nominal: '',
@@ -71,13 +74,25 @@ const submit = () => form.post(SppController.store().url);
                     </div>
                     <div class="space-y-2">
                         <label
-                            for="jenis_pembayaran"
+                            for="jenis_pembayaran_id"
                             class="text-sm font-medium"
                             >Jenis Pembayaran</label
-                        ><Input
-                            id="jenis_pembayaran"
-                            v-model="form.jenis_pembayaran"
-                        /><InputError :message="form.errors.jenis_pembayaran" />
+                        ><select
+                            id="jenis_pembayaran_id"
+                            v-model="form.jenis_pembayaran_id"
+                            class="h-9 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground"
+                        >
+                            <option value="">Pilih jenis pembayaran</option>
+                            <option
+                                v-for="jenis in jenisPembayarans"
+                                :key="jenis.id"
+                                :value="String(jenis.id)"
+                            >
+                                {{ jenis.nama_jenis }}
+                            </option></select
+                        ><InputError
+                            :message="form.errors.jenis_pembayaran_id"
+                        />
                     </div>
                     <div class="space-y-2">
                         <label for="tanggal_tagihan" class="text-sm font-medium"

@@ -3,10 +3,8 @@
 namespace Database\Factories;
 
 use App\Models\Guru;
-use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Facades\Hash;
 
 /**
  * @extends Factory<Guru>
@@ -20,23 +18,8 @@ class GuruFactory extends Factory
      */
     public function definition(): array
     {
-        $roleGuru = Role::where('role_name', 'Guru')->first();
-
         return [
-
-            'user_id' => User::factory()->create([
-
-                'role_id' => $roleGuru?->id,
-
-                'name' => $this->faker->name(),
-
-                'email' => $this->faker->unique()->safeEmail(),
-
-                'password' => Hash::make('password'),
-
-                'status' => true,
-
-            ])->id,
+            'user_id' => User::factory()->guru(),
 
             'nama' => $this->faker->name(),
 

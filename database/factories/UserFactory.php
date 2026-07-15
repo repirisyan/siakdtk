@@ -51,6 +51,23 @@ class UserFactory extends Factory
         ]);
     }
 
+    public function withRole(string $roleName): static
+    {
+        return $this->state(fn () => [
+            'role_id' => Role::firstOrCreate(['role_name' => $roleName])->id,
+        ]);
+    }
+
+    public function guru(): static
+    {
+        return $this->withRole('Guru');
+    }
+
+    public function orangTua(): static
+    {
+        return $this->withRole('Orangtua Siswa');
+    }
+
     /**
      * Indicate that the model has two-factor authentication configured.
      */

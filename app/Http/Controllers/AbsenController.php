@@ -6,6 +6,7 @@ use App\Http\Requests\AbsenRequest;
 use App\Models\Absen;
 use App\Models\Jadwal;
 use App\Models\Kelas;
+use App\Models\RaporAkhir;
 use App\Models\Siswa;
 use App\Models\User;
 use Inertia\Inertia;
@@ -21,6 +22,7 @@ class AbsenController extends Controller
         $kelas = $this->kelasForUser($user);
         $jadwals = collect();
         $siswas = collect();
+        $lockedSiswaIds = collect();
 
         if ($kelasId) {
             abort_unless($kelas->contains('id', (int) $kelasId), 403);
@@ -41,12 +43,14 @@ class AbsenController extends Controller
                 ->where(['kelas_id' => $jadwal->kelas_id, 'status' => 'aktif'])
                 ->orderBy('nama')
                 ->get();
+            $lockedSiswaIds = $this->lockedSiswaIds($jadwal);
         }
 
         return Inertia::render('Absensi/Index', [
             'kelas' => $kelas,
             'jadwals' => $jadwals,
             'siswas' => $siswas,
+            'lockedSiswaIds' => $lockedSiswaIds,
             'filters' => [
                 'kelas_id' => $kelasId,
                 'jadwal_id' => $jadwalId,
@@ -65,6 +69,7 @@ class AbsenController extends Controller
         $siswa = Siswa::findOrFail($data['siswa_id']);
 
         abort_unless($siswa->kelas_id === $jadwal->kelas_id, 403);
+        $this->ensureAcademicDataIsUnlocked($siswa, $jadwal);
 
         $absen = Absen::firstOrCreate(
             [
@@ -98,6 +103,7 @@ class AbsenController extends Controller
             $absen->siswa()->value('kelas_id') === $jadwal->kelas_id,
             403,
         );
+        $this->ensureAcademicDataIsUnlocked($absen->siswa()->firstOrFail(), $jadwal);
 
         $absen->delete();
 
@@ -144,6 +150,24 @@ class AbsenController extends Controller
         }
 
         return $jadwal;
+    }
+
+    private function lockedSiswaIds(Jadwal $jadwal)
+    {
+        return RaporAkhir::query()
+            ->where('kelas_id', $jadwal->kelas_id)
+            ->where('thn_ajaran', $jadwal->kelas->thn_ajaran)
+            ->where('status', 'disetujui')
+            ->pluck('siswa_id');
+    }
+
+    private function ensureAcademicDataIsUnlocked(Siswa $siswa, Jadwal $jadwal): void
+    {
+        abort_unless(
+            ! $this->lockedSiswaIds($jadwal)->contains($siswa->id),
+            403,
+            'Absensi tidak dapat diubah karena Rapor Akhir siswa telah disetujui.',
+        );
     }
 
     private function currentAttendanceUser(): User

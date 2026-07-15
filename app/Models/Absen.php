@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Absen extends Model
 {
+    use HasFactory;
+
     protected $guarded = ['id'];
 
     public function siswa(): BelongsTo
@@ -20,8 +23,8 @@ class Absen extends Model
         return $this->belongsTo(Jadwal::class);
     }
 
-    public function nilai(): HasOne
+    public function nilais(): HasMany
     {
-        return $this->hasOne(Nilai::class, 'absen_id');
+        return $this->hasMany(Nilai::class);
     }
 }

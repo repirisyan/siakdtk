@@ -6,7 +6,10 @@ use App\Http\Requests\PenilaianRequest;
 use App\Models\Absen;
 use App\Models\Jadwal;
 use App\Models\Kelas;
+use App\Models\KomponenPenilaian;
 use App\Models\Nilai;
+use App\Models\RaporAkhir;
+use App\Models\Siswa;
 use App\Models\User;
 use Inertia\Inertia;
 
@@ -21,6 +24,8 @@ class PenilaianController extends Controller
         $kelas = $this->kelasForUser($user);
         $jadwals = collect();
         $absens = collect();
+        $komponenPenilaians = collect();
+        $lockedSiswaIds = collect();
 
         if ($kelasId) {
             abort_unless($kelas->contains('id', (int) $kelasId), 403);
@@ -34,12 +39,19 @@ class PenilaianController extends Controller
             abort_unless($jadwal->kelas_id === (int) $kelasId, 403);
 
             $absens = $this->getSiswa($user, (int) $kelasId, $jadwal->id);
+            $komponenPenilaians = KomponenPenilaian::active()
+                ->where('sub_tema_id', $jadwal->sub_tema_id)
+                ->orderBy('nama_komponen')
+                ->get(['id', 'sub_tema_id', 'nama_komponen', 'deskripsi']);
+            $lockedSiswaIds = $this->lockedSiswaIds($jadwal);
         }
 
         return Inertia::render('Penilaian/Index', [
             'kelas' => $kelas,
             'jadwals' => $jadwals,
             'absens' => $absens,
+            'komponenPenilaians' => $komponenPenilaians,
+            'lockedSiswaIds' => $lockedSiswaIds,
             'filters' => [
                 'kelas_id' => $kelasId,
                 'jadwal_id' => $jadwalId,
@@ -67,7 +79,8 @@ class PenilaianController extends Controller
 
         return Absen::with([
             'siswa:id,nama,nis,kelas_id',
-            'nilai:id,absen_id,nilai,keterangan',
+            'nilais:id,absen_id,komponen_penilaian_id,nilai,keterangan',
+            'nilais.komponenPenilaian:id,nama_komponen',
         ])
             ->where('jadwal_id', $jadwalId)
             ->orderBy('id')
@@ -90,9 +103,18 @@ class PenilaianController extends Controller
                 && $absen->siswa->kelas_id === $jadwal->kelas_id,
             403,
         );
+        $this->ensureAcademicDataIsUnlocked($absen->siswa, $jadwal);
 
-        $nilai = Nilai::firstOrCreate(
-            ['absen_id' => $absen->id],
+        abort_unless(
+            KomponenPenilaian::active()
+                ->whereKey($data['komponen_penilaian_id'])
+                ->where('sub_tema_id', $jadwal->sub_tema_id)
+                ->exists(),
+            403,
+        );
+
+        $nilai = Nilai::updateOrCreate(
+            ['absen_id' => $absen->id, 'komponen_penilaian_id' => $data['komponen_penilaian_id']],
             [
                 'nilai' => $data['nilai'],
                 'keterangan' => $data['keterangan'],
@@ -101,7 +123,7 @@ class PenilaianController extends Controller
 
         $message = $nilai->wasRecentlyCreated
             ? 'Nilai berhasil disimpan.'
-            : 'Nilai siswa sudah tercatat.';
+            : 'Nilai berhasil diperbarui.';
 
         return redirect()
             ->route('penilaian.index', [
@@ -134,6 +156,24 @@ class PenilaianController extends Controller
         }
 
         return $jadwal;
+    }
+
+    private function lockedSiswaIds(Jadwal $jadwal)
+    {
+        return RaporAkhir::query()
+            ->where('kelas_id', $jadwal->kelas_id)
+            ->where('thn_ajaran', $jadwal->kelas->thn_ajaran)
+            ->where('status', 'disetujui')
+            ->pluck('siswa_id');
+    }
+
+    private function ensureAcademicDataIsUnlocked(Siswa $siswa, Jadwal $jadwal): void
+    {
+        abort_unless(
+            ! $this->lockedSiswaIds($jadwal)->contains($siswa->id),
+            403,
+            'Nilai tidak dapat diubah karena Rapor Akhir siswa telah disetujui.',
+        );
     }
 
     private function currentAssessmentUser(): User

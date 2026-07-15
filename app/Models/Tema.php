@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Tema extends Model
 {
@@ -36,5 +37,10 @@ class Tema extends Model
     public function subTemas(): HasMany
     {
         return $this->hasMany(SubTema::class);
+    }
+
+    public function komponenPenilaians(): HasManyThrough
+    {
+        return $this->hasManyThrough(KomponenPenilaian::class, SubTema::class);
     }
 }

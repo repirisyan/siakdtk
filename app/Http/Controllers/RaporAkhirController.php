@@ -7,6 +7,7 @@ use App\Models\Kelas;
 use App\Models\Nilai;
 use App\Models\RaporAkhir;
 use App\Models\RaporAkhirDetail;
+use App\Models\SchoolSetting;
 use App\Models\Siswa;
 use App\Models\Tema;
 use App\Models\User;
@@ -41,10 +42,15 @@ class RaporAkhirController extends Controller
             $raporAkhirs = RaporAkhir::with(['details.tema:id,nama_tema', 'details.guru:id,nama,nip'])
                 ->where('kelas_id', $kelasId)->where('thn_ajaran', $selectedKelas->thn_ajaran)
                 ->whereIn('siswa_id', $siswas->pluck('id'))->get();
-            $references = Nilai::with(['absen.siswa:id,nama', 'absen.jadwal:id,tema_id,sub_tema_id', 'absen.jadwal.subTema:id,nama_sub_tema'])
+            $references = Nilai::with([
+                'absen.siswa:id,nama',
+                'absen.jadwal:id,tema_id,sub_tema_id',
+                'absen.jadwal.subTema:id,nama_sub_tema',
+                'komponenPenilaian:id,nama_komponen',
+            ])
                 ->whereHas('absen', fn ($query) => $query->whereIn('siswa_id', $siswas->pluck('id')))
                 ->whereHas('absen.jadwal', fn ($query) => $query->where('kelas_id', $kelasId)->whereIn('tema_id', $temas->pluck('id')))
-                ->get(['id', 'absen_id', 'nilai', 'keterangan']);
+                ->get(['id', 'absen_id', 'komponen_penilaian_id', 'nilai', 'keterangan']);
         }
 
         return Inertia::render('RaporAkhir/Index', [
@@ -126,6 +132,31 @@ class RaporAkhirController extends Controller
         $count = RaporAkhir::where('kelas_id', $kelas->id)->where('thn_ajaran', $kelas->thn_ajaran)->where('status', 'menunggu_validasi')->update(['status' => 'disetujui', 'approved_by' => $user->id, 'approved_at' => now()]);
 
         return back()->with($count ? 'success' : 'warning', $count ? "{$count} Rapor Akhir berhasil disetujui." : 'Tidak ada Rapor Akhir yang menunggu validasi.');
+    }
+
+    public function printClass(Kelas $kelas)
+    {
+        $this->authorizeKelas($this->currentUser(), $kelas->id);
+
+        $rapors = RaporAkhir::with(['siswa:id,nama,nis,kelas_id', 'details.tema:id,nama_tema', 'details.guru:id,nama,nip', 'approver:id,name'])
+            ->where('kelas_id', $kelas->id)
+            ->where('thn_ajaran', $kelas->thn_ajaran)
+            ->where('status', 'disetujui')
+            ->orderBy('siswa_id')
+            ->get();
+
+        abort_unless($rapors->isNotEmpty(), 404, 'Belum ada Rapor Akhir yang disetujui untuk kelas ini.');
+
+        return view('rapor-akhir.print', ['school' => SchoolSetting::current(), 'kelas' => $kelas, 'rapors' => $rapors]);
+    }
+
+    public function printStudent(RaporAkhir $raporAkhir)
+    {
+        $this->authorizeKelas($this->currentUser(), $raporAkhir->kelas_id);
+        abort_unless($raporAkhir->status === 'disetujui', 403);
+        $raporAkhir->load(['siswa:id,nama,nis,kelas_id', 'kelas:id,nama_kelas,thn_ajaran', 'details.tema:id,nama_tema', 'details.guru:id,nama,nip', 'approver:id,name']);
+
+        return view('rapor-akhir.print', ['school' => SchoolSetting::current(), 'kelas' => $raporAkhir->kelas, 'rapors' => collect([$raporAkhir])]);
     }
 
     private function temaIds(int $kelasId, string|int $tahunAjaran)

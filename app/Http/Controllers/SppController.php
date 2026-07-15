@@ -7,6 +7,7 @@ use App\Http\Requests\SendSppNotificationByFilterRequest;
 use App\Http\Requests\SendSppNotificationRequest;
 use App\Http\Requests\SppRequest;
 use App\Jobs\SendSppBillingNotification;
+use App\Models\JenisPembayaran;
 use App\Models\Kelas;
 use App\Models\Siswa;
 use App\Models\Spp;
@@ -42,7 +43,7 @@ class SppController extends Controller
         $this->applyFilters($query, compact('search', 'kelasId', 'thnAjaran', 'status', 'jenisPembayaran'));
 
         $summary = (clone $query)->selectRaw('COALESCE(SUM(nominal), 0) as total_tagihan')->first();
-        $totalDibayar = (float) SppPembayaran::whereIn('spp_id', (clone $query)->select('id'))->where('status_verifikasi', 'approved')->sum('jumlah_bayar');
+        $totalDibayar = (float) SppPembayaran::whereIn('pembayaran_id', (clone $query)->select('id'))->where('status_verifikasi', 'approved')->sum('jumlah_bayar');
 
         $spps = $query
             ->withSum('approvedPayments as total_dibayar', 'jumlah_bayar')
@@ -67,7 +68,7 @@ class SppController extends Controller
             ],
             'kelasOptions' => Kelas::active()->orderBy('nama_kelas')->get(['id', 'nama_kelas', 'thn_ajaran']),
             'tahunAjaranOptions' => Kelas::active()->select('thn_ajaran')->distinct()->orderByDesc('thn_ajaran')->pluck('thn_ajaran'),
-            'jenisPembayaranOptions' => Spp::select('jenis_pembayaran')->distinct()->orderBy('jenis_pembayaran')->pluck('jenis_pembayaran'),
+            'jenisPembayaranOptions' => JenisPembayaran::active()->orderBy('nama_jenis')->get(['id', 'nama_jenis']),
             'summary' => [
                 'total_tagihan' => (float) ($summary->total_tagihan ?? 0),
                 'total_dibayar' => $totalDibayar,
@@ -83,6 +84,7 @@ class SppController extends Controller
 
         return Inertia::render('Spp/Create', [
             'siswas' => $this->siswaOptions(),
+            'jenisPembayarans' => $this->jenisPembayaranOptions(),
         ]);
     }
 
@@ -90,7 +92,7 @@ class SppController extends Controller
     {
         $this->currentSppManager();
 
-        Spp::create($request->validated());
+        Spp::create($this->sppData($request->validated()));
 
         return redirect()
             ->route('spp.index')
@@ -114,13 +116,14 @@ class SppController extends Controller
         return Inertia::render('Spp/Edit', [
             'spp' => $spp->load('siswa:id,nama,nis'),
             'siswas' => $this->siswaOptions(),
+            'jenisPembayarans' => $this->jenisPembayaranOptions(),
         ]);
     }
 
     public function update(SppRequest $request, Spp $spp)
     {
         $this->currentSppManager();
-        $data = $request->validated();
+        $data = $this->sppData($request->validated());
 
         if ((float) $data['nominal'] < (float) $spp->approvedPayments()->sum('jumlah_bayar')) {
             throw ValidationException::withMessages([
@@ -160,6 +163,7 @@ class SppController extends Controller
     {
         $data = $request->validated();
         $this->currentSppManager();
+        $jenisPembayaran = JenisPembayaran::active()->findOrFail($data['jenis_pembayaran_id']);
 
         $siswas = Siswa::query()
             ->where('status', 'aktif')
@@ -170,14 +174,14 @@ class SppController extends Controller
             ->with('kelas:id,thn_ajaran')
             ->get(['id', 'kelas_id']);
 
-        [$created, $skipped] = DB::transaction(function () use ($data, $siswas) {
+        [$created, $skipped] = DB::transaction(function () use ($data, $siswas, $jenisPembayaran) {
             $created = 0;
             $skipped = 0;
 
             foreach ($siswas as $siswa) {
                 $exists = Spp::where([
                     'siswa_id' => $siswa->id,
-                    'jenis_pembayaran' => $data['jenis_pembayaran'],
+                    'jenis_pembayaran' => $jenisPembayaran->nama_jenis,
                     'tanggal_tagihan' => $data['tanggal_tagihan'],
                 ])->exists();
 
@@ -190,7 +194,8 @@ class SppController extends Controller
                 Spp::create([
                     'siswa_id' => $siswa->id,
                     'thn_ajaran' => $siswa->kelas->thn_ajaran,
-                    'jenis_pembayaran' => $data['jenis_pembayaran'],
+                    'jenis_pembayaran_id' => $jenisPembayaran->id,
+                    'jenis_pembayaran' => $jenisPembayaran->nama_jenis,
                     'nominal' => $data['nominal'],
                     'tanggal_tagihan' => $data['tanggal_tagihan'],
                     'jatuh_tempo' => $data['jatuh_tempo'],
@@ -267,6 +272,18 @@ class SppController extends Controller
             ->get(['id', 'kelas_id', 'nama', 'nis']);
     }
 
+    private function jenisPembayaranOptions()
+    {
+        return JenisPembayaran::active()->orderBy('nama_jenis')->get(['id', 'nama_jenis']);
+    }
+
+    private function sppData(array $data): array
+    {
+        $jenisPembayaran = JenisPembayaran::active()->findOrFail($data['jenis_pembayaran_id']);
+
+        return [...$data, 'jenis_pembayaran' => $jenisPembayaran->nama_jenis];
+    }
+
     private function applyFilters($query, array $filters): void
     {
         $query
@@ -278,8 +295,8 @@ class SppController extends Controller
             ->when($filters['kelasId'] ?? null, fn ($query, $kelasId) => $query->whereHas('siswa', fn ($query) => $query->where('kelas_id', $kelasId)))
             ->when($filters['thnAjaran'] ?? null, fn ($query, $thnAjaran) => $query->where('thn_ajaran', $thnAjaran))
             ->when($filters['jenisPembayaran'] ?? null, fn ($query, $jenisPembayaran) => $query->where('jenis_pembayaran', $jenisPembayaran))
-            ->when(($filters['status'] ?? null) === 'lunas', fn ($query) => $query->whereRaw("(SELECT COALESCE(SUM(jumlah_bayar), 0) FROM spp_pembayarans WHERE spp_pembayarans.spp_id = spps.id AND status_verifikasi = 'approved') >= spps.nominal"))
-            ->when(($filters['status'] ?? null) === 'belum_lunas', fn ($query) => $query->whereRaw("(SELECT COALESCE(SUM(jumlah_bayar), 0) FROM spp_pembayarans WHERE spp_pembayarans.spp_id = spps.id AND status_verifikasi = 'approved') < spps.nominal"));
+            ->when(($filters['status'] ?? null) === 'lunas', fn ($query) => $query->whereRaw("(SELECT COALESCE(SUM(jumlah_bayar), 0) FROM detail_pembayarans WHERE detail_pembayarans.pembayaran_id = pembayarans.id AND status_verifikasi = 'approved') >= pembayarans.nominal"))
+            ->when(($filters['status'] ?? null) === 'belum_lunas', fn ($query) => $query->whereRaw("(SELECT COALESCE(SUM(jumlah_bayar), 0) FROM detail_pembayarans WHERE detail_pembayarans.pembayaran_id = pembayarans.id AND status_verifikasi = 'approved') < pembayarans.nominal"));
     }
 
     private function queueNotifications($sppIds, User $sender, string $source, array $filters = []): int

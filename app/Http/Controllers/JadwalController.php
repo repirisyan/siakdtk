@@ -18,6 +18,7 @@ class JadwalController extends Controller
      */
     public function index()
     {
+        $user = $this->currentSchedulingUser();
         $search = request()->query('search');
         $sort = request()->query('sort', 'id');
         $direction = request()->query('direction', 'desc');
@@ -30,6 +31,7 @@ class JadwalController extends Controller
             'tema:id,nama_tema',
             'subTema:id,tema_id,nama_sub_tema',
         ])
+            ->when($this->isGuru($user), fn ($query) => $query->where('guru_id', $user->guru->id))
             ->when($search, function ($query, $search) {
                 $query->where(function ($query) use ($search) {
                     $query
@@ -104,6 +106,8 @@ class JadwalController extends Controller
      */
     public function show(Jadwal $jadwal)
     {
+        $this->authorizeJadwal($jadwal);
+
         return Inertia::render('Jadwal/Show', [
             'jadwal' => $jadwal->load(['kelas:id,nama_kelas,thn_ajaran', 'guru:id,nama,nip', 'tema:id,nama_tema', 'subTema:id,tema_id,nama_sub_tema']),
         ]);

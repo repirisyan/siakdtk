@@ -46,6 +46,7 @@ import { validationIndex as validasiRaporIndex } from '@/actions/App/Http/Contro
 import { index as userIndex } from '@/actions/App/Http/Controllers/UserController';
 import { index as raporAnakIndex } from '@/actions/App/Http/Controllers/RaporAnakController';
 import { index as sppIndex } from '@/actions/App/Http/Controllers/SppController';
+import { index as jenisPembayaranIndex } from '@/actions/App/Http/Controllers/JenisPembayaranController';
 import { index as tagihanSayaIndex } from '@/actions/App/Http/Controllers/TagihanSayaController';
 import { index as kontenIndex } from '@/actions/App/Http/Controllers/KontenController';
 import type { NavItem } from '@/types';
@@ -85,12 +86,7 @@ const menus: SidebarMenuItem[] = [
         title: 'Kelola Tema',
         href: temaIndex(),
         icon: BookOpen,
-        roles: ['Admin', 'Staff Akademik'],
-    },
-    {
-        title: 'Kelola Sub Tema',
-        href: subTemaIndex(),
-        icon: BookOpen,
+        activePrefixes: ['/sub-tema', '/komponen-penilaian'],
         roles: ['Admin', 'Staff Akademik'],
     },
     {
@@ -158,6 +154,12 @@ const menus: SidebarMenuItem[] = [
         href: sppIndex(),
         icon: Wallet,
         roles: ['Admin', 'Staff Administrasi', 'Kepsek'],
+    },
+    {
+        title: 'Jenis Pembayaran',
+        href: jenisPembayaranIndex(),
+        icon: Wallet,
+        roles: ['Admin', 'Staff Administrasi'],
     },
     {
         title: 'Kelola User',

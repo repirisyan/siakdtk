@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\SubTema;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Tema;
 use Illuminate\Database\Seeder;
 
 class SubTemaSeeder extends Seeder
@@ -13,6 +13,15 @@ class SubTemaSeeder extends Seeder
      */
     public function run(): void
     {
-        SubTema::factory(20)->create();
+        $tema = Tema::where('status', true)->orderBy('id')->firstOrFail();
+
+        collect([
+            'Rumah dan Sekolah',
+            'Teman di Sekitar',
+            'Menjaga Lingkungan',
+        ])->each(fn (string $nama) => SubTema::updateOrCreate(
+            ['tema_id' => $tema->id, 'nama_sub_tema' => $nama],
+            ['deskripsi' => "Kegiatan pembelajaran {$nama}."],
+        ));
     }
 }

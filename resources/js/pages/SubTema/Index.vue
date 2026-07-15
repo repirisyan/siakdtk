@@ -91,6 +91,14 @@ const remove = (id: number) => {
                                     "
                                     >Edit</Button
                                 ><Button
+                                    variant="secondary"
+                                    @click="
+                                        router.visit(
+                                            `/komponen-penilaian?sub_tema_id=${subTema.id}`,
+                                        )
+                                    "
+                                    >Tambah Komponen Penilaian</Button
+                                ><Button
                                     variant="destructive"
                                     @click="remove(subTema.id)"
                                     >Hapus</Button

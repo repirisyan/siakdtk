@@ -25,6 +25,12 @@ interface Guru {
 interface Tema {
     id: number;
     nama_tema: string;
+    sub_temas: SubTema[];
+}
+interface SubTema {
+    id: number;
+    tema_id: number;
+    nama_sub_tema: string;
 }
 
 interface Siswa {
@@ -39,6 +45,7 @@ interface Rapor {
     siswa_id: number;
     guru_id: number;
     tema_id: number;
+    sub_tema_id: number;
     thn_ajaran: string;
     keterangan: string | null;
     status: 'draft' | 'diajukan' | 'disetujui' | 'ditolak';
@@ -50,6 +57,7 @@ interface RaporForm {
     kelas_id: string;
     siswa_id: string;
     tema_id: string;
+    sub_tema_id: string;
     guru_id: string;
     thn_ajaran: string;
     keterangan: string;
@@ -71,7 +79,7 @@ const filters = computed(
 const selectedKelas = ref(filters.value.kelas_id ?? '');
 const isLoading = ref(false);
 const selectedSiswa = ref<Siswa | null>(null);
-const selectedTema = ref<Tema | null>(null);
+const selectedSubTema = ref<SubTema | null>(null);
 const selectedRapor = ref<Rapor | null>(null);
 const modalMode = ref<'write' | 'view' | 'edit' | null>(null);
 
@@ -83,6 +91,7 @@ const raporForm = useForm<RaporForm>({
     kelas_id: '',
     siswa_id: '',
     tema_id: '',
+    sub_tema_id: '',
     guru_id: '',
     thn_ajaran: '',
     keterangan: '',
@@ -108,25 +117,26 @@ const loadKelas = () => {
     );
 };
 
-const raporFor = (siswa: Siswa, tema: Tema) =>
+const raporFor = (siswa: Siswa, subTema: SubTema) =>
     rapors.value.find(
-        (rapor) => rapor.siswa_id === siswa.id && rapor.tema_id === tema.id,
+        (rapor) =>
+            rapor.siswa_id === siswa.id && rapor.sub_tema_id === subTema.id,
     ) ?? null;
 
 const isEditable = (rapor: Rapor) =>
     canManageRapor.value && ['draft', 'ditolak'].includes(rapor.status);
 
-const openWrite = (siswa: Siswa, tema: Tema) => {
+const openWrite = (siswa: Siswa, tema: Tema, subTema: SubTema) => {
     selectedSiswa.value = siswa;
-    selectedTema.value = tema;
+    selectedSubTema.value = subTema;
     selectedRapor.value = null;
     modalMode.value = 'write';
     raporForm.keterangan = '';
 };
 
-const openView = (siswa: Siswa, tema: Tema, rapor: Rapor) => {
+const openView = (siswa: Siswa, subTema: SubTema, rapor: Rapor) => {
     selectedSiswa.value = siswa;
-    selectedTema.value = tema;
+    selectedSubTema.value = subTema;
     selectedRapor.value = rapor;
     modalMode.value = 'view';
     raporForm.keterangan = rapor.keterangan ?? '';
@@ -135,7 +145,7 @@ const openView = (siswa: Siswa, tema: Tema, rapor: Rapor) => {
 const closeModal = () => {
     modalMode.value = null;
     selectedSiswa.value = null;
-    selectedTema.value = null;
+    selectedSubTema.value = null;
     selectedRapor.value = null;
     raporForm.clearErrors();
 };
@@ -143,7 +153,7 @@ const closeModal = () => {
 const submitRapor = () => {
     if (
         !selectedSiswa.value ||
-        !selectedTema.value ||
+        !selectedSubTema.value ||
         !selectedKelasData.value ||
         !currentGuru.value
     ) {
@@ -152,7 +162,8 @@ const submitRapor = () => {
 
     raporForm.kelas_id = String(selectedKelasData.value.id);
     raporForm.siswa_id = String(selectedSiswa.value.id);
-    raporForm.tema_id = String(selectedTema.value.id);
+    raporForm.tema_id = String(selectedSubTema.value.tema_id);
+    raporForm.sub_tema_id = String(selectedSubTema.value.id);
     raporForm.guru_id = String(currentGuru.value.id);
     raporForm.thn_ajaran = String(selectedKelasData.value.thn_ajaran);
     const options = { preserveScroll: true, onSuccess: closeModal };
@@ -202,7 +213,8 @@ const statusClass = (status: Rapor['status']) =>
         <div>
             <h1 class="text-2xl font-bold">Penilaian Rapor</h1>
             <p class="text-sm text-muted-foreground">
-                Kelola catatan perkembangan siswa berdasarkan kelas dan tema.
+                Kelola ringkasan perkembangan siswa per Sub Tema berdasarkan
+                jadwal kelas.
             </p>
         </div>
 
@@ -293,10 +305,29 @@ const statusClass = (status: Rapor['status']) =>
                         <th
                             v-for="tema in temas"
                             :key="tema.id"
-                            class="min-w-48 px-4 py-3 text-left text-sm font-medium"
+                            :colspan="tema.sub_temas.length"
+                            class="min-w-48 px-4 py-3 text-center text-sm font-medium"
                         >
                             {{ tema.nama_tema }}
                         </th>
+                    </tr>
+                    <tr>
+                        <th
+                            class="sticky left-0 bg-muted/50 px-4 py-3 text-left text-sm font-medium"
+                        >
+                            Sub Tema
+                        </th>
+                        <template
+                            v-for="tema in temas"
+                            :key="`${tema.id}-sub-temas`"
+                            ><th
+                                v-for="subTema in tema.sub_temas"
+                                :key="subTema.id"
+                                class="min-w-48 px-4 py-3 text-left text-sm font-medium"
+                            >
+                                {{ subTema.nama_sub_tema }}
+                            </th></template
+                        >
                     </tr>
                 </thead>
                 <tbody>
@@ -311,50 +342,65 @@ const statusClass = (status: Rapor['status']) =>
                                 {{ siswa.nis ?? '-' }}
                             </p>
                         </td>
-                        <td
+                        <template
                             v-for="tema in temas"
-                            :key="tema.id"
-                            class="space-y-2 px-4 py-3"
+                            :key="`${siswa.id}-${tema.id}`"
+                            ><td
+                                v-for="subTema in tema.sub_temas"
+                                :key="subTema.id"
+                                class="space-y-2 px-4 py-3"
+                            >
+                                <Button
+                                    v-if="
+                                        !raporFor(siswa, subTema) &&
+                                        canManageRapor
+                                    "
+                                    size="sm"
+                                    variant="outline"
+                                    @click="openWrite(siswa, tema, subTema)"
+                                    >Tulis Ringkasan</Button
+                                ><Button
+                                    v-else-if="raporFor(siswa, subTema)"
+                                    size="sm"
+                                    variant="secondary"
+                                    @click="
+                                        openView(
+                                            siswa,
+                                            subTema,
+                                            raporFor(siswa, subTema)!,
+                                        )
+                                    "
+                                    >Lihat Ringkasan</Button
+                                ><span
+                                    v-else
+                                    class="text-sm text-muted-foreground"
+                                    >-</span
+                                ><span
+                                    v-if="raporFor(siswa, subTema)"
+                                    class="block w-fit rounded-full px-2 py-1 text-xs font-medium"
+                                    :class="
+                                        statusClass(
+                                            raporFor(siswa, subTema)!.status,
+                                        )
+                                    "
+                                    >{{
+                                        statusLabel(
+                                            raporFor(siswa, subTema)!.status,
+                                        )
+                                    }}</span
+                                >
+                            </td></template
                         >
-                            <Button
-                                v-if="!raporFor(siswa, tema) && canManageRapor"
-                                size="sm"
-                                variant="outline"
-                                @click="openWrite(siswa, tema)"
-                            >
-                                Tulis Catatan
-                            </Button>
-                            <Button
-                                v-else-if="raporFor(siswa, tema)"
-                                size="sm"
-                                variant="secondary"
-                                @click="
-                                    openView(
-                                        siswa,
-                                        tema,
-                                        raporFor(siswa, tema)!,
-                                    )
-                                "
-                            >
-                                Lihat Catatan
-                            </Button>
-                            <span v-else class="text-sm text-muted-foreground"
-                                >-</span
-                            >
-                            <span
-                                v-if="raporFor(siswa, tema)"
-                                class="block w-fit rounded-full px-2 py-1 text-xs font-medium"
-                                :class="
-                                    statusClass(raporFor(siswa, tema)!.status)
-                                "
-                            >
-                                {{ statusLabel(raporFor(siswa, tema)!.status) }}
-                            </span>
-                        </td>
                     </tr>
                     <tr v-if="!siswas.length">
                         <td
-                            :colspan="temas.length + 1"
+                            :colspan="
+                                temas.reduce(
+                                    (total, tema) =>
+                                        total + tema.sub_temas.length,
+                                    0,
+                                ) + 1
+                            "
                             class="py-8 text-center text-muted-foreground"
                         >
                             Tidak ada siswa pada kelas ini
@@ -365,7 +411,7 @@ const statusClass = (status: Rapor['status']) =>
         </div>
 
         <div
-            v-if="modalMode && selectedSiswa && selectedTema"
+            v-if="modalMode && selectedSiswa && selectedSubTema"
             class="fixed inset-0 z-50 flex items-center justify-center bg-muted/80 p-4"
         >
             <div
@@ -382,7 +428,8 @@ const statusClass = (status: Rapor['status']) =>
                         }}
                     </h2>
                     <p class="text-sm text-muted-foreground">
-                        {{ selectedSiswa.nama }} · {{ selectedTema.nama_tema }}
+                        {{ selectedSiswa.nama }} ·
+                        {{ selectedSubTema.nama_sub_tema }}
                     </p>
                 </div>
                 <div v-if="modalMode === 'view'" class="mt-6 space-y-4">
@@ -409,7 +456,7 @@ const statusClass = (status: Rapor['status']) =>
                     </dl>
                     <div>
                         <p class="text-sm text-muted-foreground">
-                            Keterangan Perkembangan Siswa
+                            Ringkasan Perkembangan Sub Tema
                         </p>
                         <p class="mt-2 whitespace-pre-wrap">
                             {{ selectedRapor?.keterangan || '-' }}
@@ -442,13 +489,13 @@ const statusClass = (status: Rapor['status']) =>
                 >
                     <div class="space-y-2">
                         <label for="keterangan" class="text-sm font-medium">
-                            Keterangan Perkembangan Siswa
+                            Ringkasan Perkembangan Sub Tema
                         </label>
                         <textarea
                             id="keterangan"
                             v-model="raporForm.keterangan"
                             class="min-h-64 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
-                            placeholder="Tulis deskripsi perkembangan siswa"
+                            placeholder="Tulis ringkasan deskriptif perkembangan siswa pada Sub Tema ini"
                         />
                         <InputError :message="raporForm.errors.keterangan" />
                     </div>

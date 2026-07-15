@@ -3,11 +3,9 @@
 namespace Database\Factories;
 
 use App\Models\Kelas;
-use App\Models\Role;
 use App\Models\Siswa;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Facades\Hash;
 
 /**
  * @extends Factory<Siswa>
@@ -21,35 +19,13 @@ class SiswaFactory extends Factory
      */
     public function definition(): array
     {
-        $roleSiswa = Role::where('role_name', 'Siswa')
-
-            ->orWhere('role_name', 'Orangtua Siswa')
-
-            ->first();
-
-        $kelas = Kelas::inRandomOrder()->first()
-
-            ?? Kelas::factory()->create();
-
         $nama = $this->faker->name();
 
         return [
 
-            'user_id' => User::factory()->create([
+            'user_id' => User::factory()->orangTua(),
 
-                'role_id' => $roleSiswa?->id,
-
-                'name' => $nama,
-
-                'email' => $this->faker->unique()->safeEmail(),
-
-                'password' => Hash::make('password'),
-
-                'status' => true,
-
-            ])->id,
-
-            'kelas_id' => $kelas->id,
+            'kelas_id' => Kelas::factory(),
 
             'tanggal_registrasi' => $this->faker->date(),
 

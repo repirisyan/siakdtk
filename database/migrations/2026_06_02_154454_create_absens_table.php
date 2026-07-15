@@ -15,8 +15,8 @@ return new class extends Migration
     {
         Schema::create('absens', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(Siswa::class, 'siswa_id');
-            $table->foreignIdFor(Jadwal::class, 'jadwal_id');
+            $table->foreignIdFor(Siswa::class, 'siswa_id')->constrained();
+            $table->foreignIdFor(Jadwal::class, 'jadwal_id')->constrained();
             $table->enum('status', ['hadir', 'izin', 'sakit', 'alfa']);
             $table->text('keterangan')->nullable();
             $table->timestamps();

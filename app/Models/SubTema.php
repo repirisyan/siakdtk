@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class SubTema extends Model
 {
     use HasFactory;
+
     protected $fillable = ['tema_id', 'nama_sub_tema', 'deskripsi'];
 
     public function tema(): BelongsTo
@@ -20,5 +21,10 @@ class SubTema extends Model
     public function jadwals(): HasMany
     {
         return $this->hasMany(Jadwal::class);
+    }
+
+    public function komponenPenilaians(): HasMany
+    {
+        return $this->hasMany(KomponenPenilaian::class);
     }
 }

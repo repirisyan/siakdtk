@@ -18,7 +18,7 @@ class SendSppNotificationRequest extends FormRequest
     {
         return [
             'spp_ids' => ['required', 'array', 'min:1', 'max:1000'],
-            'spp_ids.*' => ['integer', 'distinct', 'exists:spps,id'],
+            'spp_ids.*' => ['integer', 'distinct', 'exists:pembayarans,id'],
         ];
     }
 }

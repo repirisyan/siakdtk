@@ -18,6 +18,7 @@ interface Spp {
     siswa_id: number;
     thn_ajaran: string;
     jenis_pembayaran: string;
+    jenis_pembayaran_id: number | null;
     tanggal_tagihan: string;
     jatuh_tempo: string;
     nominal: string;
@@ -26,10 +27,15 @@ interface Spp {
 const page = usePage();
 const spp = computed(() => page.props.spp as Spp);
 const siswas = computed(() => page.props.siswas as Siswa[]);
+const jenisPembayarans = computed(
+    () => page.props.jenisPembayarans as { id: number; nama_jenis: string }[],
+);
 const form = useForm({
     siswa_id: String(spp.value.siswa_id),
     thn_ajaran: spp.value.thn_ajaran,
-    jenis_pembayaran: spp.value.jenis_pembayaran,
+    jenis_pembayaran_id: spp.value.jenis_pembayaran_id
+        ? String(spp.value.jenis_pembayaran_id)
+        : '',
     tanggal_tagihan: spp.value.tanggal_tagihan,
     jatuh_tempo: spp.value.jatuh_tempo,
     nominal: spp.value.nominal,
@@ -38,7 +44,9 @@ const form = useForm({
 watch(spp, (value) => {
     form.siswa_id = String(value.siswa_id);
     form.thn_ajaran = value.thn_ajaran;
-    form.jenis_pembayaran = value.jenis_pembayaran;
+    form.jenis_pembayaran_id = value.jenis_pembayaran_id
+        ? String(value.jenis_pembayaran_id)
+        : '';
     form.tanggal_tagihan = value.tanggal_tagihan;
     form.jatuh_tempo = value.jatuh_tempo;
     form.nominal = value.nominal;
@@ -90,13 +98,25 @@ const submit = () => form.put(SppController.update(spp.value.id).url);
                     </div>
                     <div class="space-y-2">
                         <label
-                            for="jenis_pembayaran"
+                            for="jenis_pembayaran_id"
                             class="text-sm font-medium"
                             >Jenis Pembayaran</label
-                        ><Input
-                            id="jenis_pembayaran"
-                            v-model="form.jenis_pembayaran"
-                        /><InputError :message="form.errors.jenis_pembayaran" />
+                        ><select
+                            id="jenis_pembayaran_id"
+                            v-model="form.jenis_pembayaran_id"
+                            class="h-9 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground"
+                        >
+                            <option value="">Pilih jenis pembayaran</option>
+                            <option
+                                v-for="jenis in jenisPembayarans"
+                                :key="jenis.id"
+                                :value="String(jenis.id)"
+                            >
+                                {{ jenis.nama_jenis }}
+                            </option></select
+                        ><InputError
+                            :message="form.errors.jenis_pembayaran_id"
+                        />
                     </div>
                     <div class="space-y-2">
                         <label for="tanggal_tagihan" class="text-sm font-medium"

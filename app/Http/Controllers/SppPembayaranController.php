@@ -42,7 +42,7 @@ class SppPembayaranController extends Controller
         $user = $this->currentSppManager();
         $data = $request->validated();
 
-        abort_unless($payment->spp_id === $spp->id, 403);
+        abort_unless($payment->pembayaran_id === $spp->id, 403);
 
         $this->ensurePaymentDoesNotExceedBalance($spp, (float) $data['jumlah_bayar'], $payment->id);
 
@@ -73,7 +73,7 @@ class SppPembayaranController extends Controller
     {
         $this->currentSppManager();
 
-        abort_unless($payment->spp_id === $spp->id, 403);
+        abort_unless($payment->pembayaran_id === $spp->id, 403);
 
         DB::transaction(function () use ($payment) {
             if ($payment->bukti_pembayaran) {
@@ -91,7 +91,7 @@ class SppPembayaranController extends Controller
     public function approve(Spp $spp, SppPembayaran $payment)
     {
         $user = $this->currentSppManager();
-        abort_unless($payment->spp_id === $spp->id && $payment->status_verifikasi === 'pending', 403);
+        abort_unless($payment->pembayaran_id === $spp->id && $payment->status_verifikasi === 'pending', 403);
         $this->ensurePaymentDoesNotExceedBalance($spp, (float) $payment->jumlah_bayar, $payment->id);
         $payment->update(['status_verifikasi' => 'approved', 'verified_by' => $user->id, 'verified_at' => now()]);
 
@@ -101,7 +101,7 @@ class SppPembayaranController extends Controller
     public function reject(Spp $spp, SppPembayaran $payment)
     {
         $user = $this->currentSppManager();
-        abort_unless($payment->spp_id === $spp->id && $payment->status_verifikasi === 'pending', 403);
+        abort_unless($payment->pembayaran_id === $spp->id && $payment->status_verifikasi === 'pending', 403);
         $payment->update(['status_verifikasi' => 'rejected', 'verified_by' => $user->id, 'verified_at' => now()]);
 
         return redirect()->route('spp.show', $spp)->with('success', 'Pembayaran berhasil ditolak.');

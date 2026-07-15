@@ -65,7 +65,11 @@ const tahunAjaranOptions = computed(
     () => page.props.tahunAjaranOptions as string[],
 );
 const jenisPembayaranOptions = computed(
-    () => page.props.jenisPembayaranOptions as string[],
+    () =>
+        page.props.jenisPembayaranOptions as {
+            id: number;
+            nama_jenis: string;
+        }[],
 );
 const summary = computed(
     () =>
@@ -86,7 +90,7 @@ const generateForm = useForm({
     target: 'kelas',
     kelas_id: '',
     thn_ajaran: '',
-    jenis_pembayaran: 'SPP',
+    jenis_pembayaran_id: '',
     nominal: '',
     tanggal_tagihan: '',
     jatuh_tempo: '',
@@ -193,7 +197,7 @@ const sendNotificationsByFilter = () => {
 const openGenerate = () => {
     generateForm.reset();
     generateForm.target = 'kelas';
-    generateForm.jenis_pembayaran = 'SPP';
+    generateForm.jenis_pembayaran_id = '';
     generateForm.clearErrors();
     isGenerateModalOpen.value = true;
 };
@@ -300,10 +304,10 @@ const table = useVueTable({
                 <option value="">Semua Jenis</option>
                 <option
                     v-for="jenis in jenisPembayaranOptions"
-                    :key="jenis"
-                    :value="jenis"
+                    :key="jenis.id"
+                    :value="jenis.nama_jenis"
                 >
-                    {{ jenis }}
+                    {{ jenis.nama_jenis }}
                 </option>
             </select>
         </div>
@@ -495,7 +499,7 @@ const table = useVueTable({
                             :colspan="canManageSpp ? 11 : 10"
                             class="py-8 text-center text-muted-foreground"
                         >
-                            Tidak ada data SPP
+                            Tidak ada data pembayaran
                         </td>
                     </tr>
                 </tbody>
@@ -578,10 +582,20 @@ const table = useVueTable({
                     <div class="space-y-2">
                         <label class="text-sm font-medium"
                             >Jenis Pembayaran</label
-                        ><Input
-                            v-model="generateForm.jenis_pembayaran"
-                        /><InputError
-                            :message="generateForm.errors.jenis_pembayaran"
+                        ><select
+                            v-model="generateForm.jenis_pembayaran_id"
+                            class="h-9 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground"
+                        >
+                            <option value="">Pilih jenis pembayaran</option>
+                            <option
+                                v-for="jenis in jenisPembayaranOptions"
+                                :key="jenis.id"
+                                :value="String(jenis.id)"
+                            >
+                                {{ jenis.nama_jenis }}
+                            </option></select
+                        ><InputError
+                            :message="generateForm.errors.jenis_pembayaran_id"
                         />
                     </div>
                     <div class="space-y-2">
