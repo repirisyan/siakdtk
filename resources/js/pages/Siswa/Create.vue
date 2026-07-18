@@ -17,6 +17,7 @@ interface SiswaForm {
     akta_kelahiran_file: File | null;
     kartu_keluarga_file: File | null;
     thn_ajaran: string;
+    semester: string;
     nis: string;
     nisn: string;
     nik: string;
@@ -60,7 +61,7 @@ interface SiswaForm {
 
 type SiswaField = Exclude<
     keyof SiswaForm,
-    'foto_profil' | 'akta_kelahiran_file' | 'kartu_keluarga_file'
+    'semester' | 'foto_profil' | 'akta_kelahiran_file' | 'kartu_keluarga_file'
 >;
 
 interface Field {
@@ -138,6 +139,7 @@ interface Kelas {
     id: number;
     nama_kelas: string;
     thn_ajaran: string;
+    semester: number;
 }
 
 const page = usePage();
@@ -153,6 +155,7 @@ const form = useForm<SiswaForm>({
     akta_kelahiran_file: null,
     kartu_keluarga_file: null,
     thn_ajaran: '',
+    semester: '',
     nis: '',
     nisn: '',
     nik: '',
@@ -195,11 +198,22 @@ const form = useForm<SiswaForm>({
 });
 
 const changeTahunAjaran = () => {
+    form.semester = '';
     form.kelas_id = '';
 
+    reloadKelas();
+};
+
+const changeSemester = () => {
+    form.kelas_id = '';
+
+    reloadKelas();
+};
+
+const reloadKelas = () => {
     router.get(
         SiswaController.create().url,
-        { thn_ajaran: form.thn_ajaran },
+        { thn_ajaran: form.thn_ajaran, semester: form.semester },
         {
             only: ['kelas'],
             preserveState: true,
@@ -315,11 +329,12 @@ const onDocumentChange = (
                     <div>
                         <h2 class="text-lg font-semibold">Kelas</h2>
                         <p class="text-sm text-muted-foreground">
-                            Pilih tahun ajaran sebelum memilih kelas.
+                            Pilih tahun ajaran dan semester sebelum memilih
+                            kelas.
                         </p>
                     </div>
 
-                    <div class="grid gap-4 md:grid-cols-2">
+                    <div class="grid gap-4 md:grid-cols-3">
                         <div class="space-y-2">
                             <label for="thn_ajaran" class="text-sm font-medium"
                                 >Tahun Ajaran</label
@@ -342,13 +357,30 @@ const onDocumentChange = (
                             <InputError :message="form.errors.thn_ajaran" />
                         </div>
                         <div class="space-y-2">
+                            <label for="semester" class="text-sm font-medium"
+                                >Semester</label
+                            >
+                            <select
+                                id="semester"
+                                v-model="form.semester"
+                                :disabled="!form.thn_ajaran"
+                                class="h-9 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                                @change="changeSemester"
+                            >
+                                <option value="">Pilih semester</option>
+                                <option value="1">Semester 1</option>
+                                <option value="2">Semester 2</option>
+                            </select>
+                            <InputError :message="form.errors.semester" />
+                        </div>
+                        <div class="space-y-2">
                             <label for="kelas_id" class="text-sm font-medium"
                                 >Kelas</label
                             >
                             <select
                                 id="kelas_id"
                                 v-model="form.kelas_id"
-                                :disabled="!form.thn_ajaran"
+                                :disabled="!form.thn_ajaran || !form.semester"
                                 class="h-9 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground disabled:cursor-not-allowed disabled:opacity-50"
                             >
                                 <option value="">Pilih kelas</option>

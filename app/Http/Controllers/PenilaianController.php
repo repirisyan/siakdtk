@@ -10,6 +10,8 @@ use App\Models\KomponenPenilaian;
 use App\Models\Nilai;
 use App\Models\RaporAkhir;
 use App\Models\Siswa;
+use App\Models\SubTema;
+use App\Models\Tema;
 use App\Models\User;
 use Inertia\Inertia;
 
@@ -20,17 +22,55 @@ class PenilaianController extends Controller
         $user = $this->currentAssessmentUser();
         $kelasId = request()->query('kelas_id');
         $jadwalId = request()->query('jadwal_id');
+        $isSummary = request()->boolean('summary');
+        $temaId = request()->query('tema_id');
+        $subTemaId = request()->query('sub_tema_id');
 
         $kelas = $this->kelasForUser($user);
         $jadwals = collect();
         $absens = collect();
         $komponenPenilaians = collect();
         $lockedSiswaIds = collect();
+        $temas = collect();
+        $subTemas = collect();
+        $summaryStudents = collect();
 
         if ($kelasId) {
             abort_unless($kelas->contains('id', (int) $kelasId), 403);
 
             $jadwals = $this->getJadwal($user, (int) $kelasId);
+            $temas = Tema::query()
+                ->whereHas('jadwal', fn ($query) => $query
+                    ->where('kelas_id', $kelasId)
+                    ->when($user->hasRole('Guru'), fn ($query) => $query->where('guru_id', $user->guru->id)))
+                ->orderBy('nama_tema')
+                ->get(['id', 'nama_tema']);
+        }
+
+        if ($isSummary && $kelasId && $temaId) {
+            abort_unless($temas->contains('id', (int) $temaId), 403);
+
+            $subTemas = SubTema::query()
+                ->where('tema_id', $temaId)
+                ->whereHas('jadwals', fn ($query) => $query
+                    ->where('kelas_id', $kelasId)
+                    ->when($user->hasRole('Guru'), fn ($query) => $query->where('guru_id', $user->guru->id)))
+                ->orderBy('nama_sub_tema')
+                ->get(['id', 'tema_id', 'nama_sub_tema']);
+        }
+
+        if ($isSummary && $kelasId && $temaId && $subTemaId) {
+            abort_unless($subTemas->contains('id', (int) $subTemaId), 403);
+
+            $summaryStudents = Siswa::query()
+                ->where('kelas_id', $kelasId)
+                ->whereHas('absens.jadwal', fn ($query) => $query
+                    ->where('kelas_id', $kelasId)
+                    ->where('tema_id', $temaId)
+                    ->where('sub_tema_id', $subTemaId)
+                    ->when($user->hasRole('Guru'), fn ($query) => $query->where('guru_id', $user->guru->id)))
+                ->orderBy('nama')
+                ->get(['id', 'nama', 'nis']);
         }
 
         if ($jadwalId) {
@@ -52,10 +92,69 @@ class PenilaianController extends Controller
             'absens' => $absens,
             'komponenPenilaians' => $komponenPenilaians,
             'lockedSiswaIds' => $lockedSiswaIds,
+            'temas' => $temas,
+            'subTemas' => $subTemas,
+            'summaryStudents' => $summaryStudents,
             'filters' => [
                 'kelas_id' => $kelasId,
                 'jadwal_id' => $jadwalId,
+                'summary' => $isSummary,
+                'tema_id' => $temaId,
+                'sub_tema_id' => $subTemaId,
             ],
+        ]);
+    }
+
+    public function summary(Siswa $siswa)
+    {
+        $user = $this->currentAssessmentUser();
+        $kelasId = (int) request()->query('kelas_id');
+        $temaId = (int) request()->query('tema_id');
+        $subTemaId = (int) request()->query('sub_tema_id');
+
+        abort_unless($kelasId && $temaId && $subTemaId, 404);
+        abort_unless($this->kelasForUser($user)->contains('id', $kelasId), 403);
+        abort_unless($siswa->kelas_id === $kelasId, 403);
+
+        $kelas = Kelas::findOrFail($kelasId);
+        $tema = Tema::findOrFail($temaId);
+        $subTema = SubTema::where('tema_id', $temaId)->findOrFail($subTemaId);
+
+        $jadwalIds = Jadwal::query()
+            ->where('kelas_id', $kelasId)
+            ->where('tema_id', $temaId)
+            ->where('sub_tema_id', $subTemaId)
+            ->when($user->hasRole('Guru'), fn ($query) => $query->where('guru_id', $user->guru->id))
+            ->pluck('id');
+
+        $nilais = Nilai::query()
+            ->with('komponenPenilaian:id,nama_komponen')
+            ->whereHas('absen', fn ($query) => $query
+                ->where('siswa_id', $siswa->id)
+                ->whereIn('jadwal_id', $jadwalIds))
+            ->orderBy('komponen_penilaian_id')
+            ->get(['id', 'absen_id', 'komponen_penilaian_id', 'keterangan']);
+
+        $components = $nilais
+            ->groupBy('komponen_penilaian_id')
+            ->map(fn ($items) => [
+                'id' => $items->first()->komponen_penilaian_id,
+                'nama_komponen' => $items->first()->komponenPenilaian?->nama_komponen ?? 'Komponen',
+                'keterangan' => $items->pluck('keterangan')->filter()->unique()->values()->join('; ') ?: '-',
+            ])->values();
+
+        return Inertia::render('Penilaian/Summary', [
+            'siswa' => $siswa->only(['id', 'nama', 'nis']),
+            'kelas' => $kelas->only(['id', 'nama_kelas', 'thn_ajaran']),
+            'tema' => $tema->only(['id', 'nama_tema']),
+            'subTema' => $subTema->only(['id', 'nama_sub_tema']),
+            'components' => $components,
+            'backUrl' => route('penilaian.index', [
+                'kelas_id' => $kelasId,
+                'summary' => 1,
+                'tema_id' => $temaId,
+                'sub_tema_id' => $subTemaId,
+            ]),
         ]);
     }
 
@@ -68,7 +167,7 @@ class PenilaianController extends Controller
             })
             ->orderBy('tanggal')
             ->orderBy('jam_mulai')
-            ->get(['id', 'kelas_id', 'guru_id', 'tema_id', 'tanggal', 'jam_mulai', 'jam_selesai']);
+            ->get(['id', 'kelas_id', 'guru_id', 'tema_id', 'sub_tema_id', 'tanggal', 'jam_mulai', 'jam_selesai']);
     }
 
     public function getSiswa(User $user, int $kelasId, int $jadwalId)

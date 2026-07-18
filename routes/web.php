@@ -111,6 +111,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('absensi', AbsenController::class)->parameters([
         'absensi' => 'absen',
     ])->only(['index', 'store', 'destroy']);
+    Route::get('penilaian/summary/{siswa}', [PenilaianController::class, 'summary'])
+        ->name('penilaian.summary');
     Route::resource('penilaian', PenilaianController::class)->only(['index', 'store']);
     Route::resource('rapor', RaporController::class)->only(['index', 'store', 'show', 'update']);
     Route::get('hasil-akhir-rapor', [RaporAkhirController::class, 'index'])->name('rapor-akhir.index');

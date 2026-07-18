@@ -113,16 +113,17 @@ class SiswaController extends Controller
         $this->currentSiswaManager();
 
         $tahun = request()->query('thn_ajaran');
+        $semester = request()->integer('semester') ?: null;
 
         return Inertia::render('Siswa/Create', [
             'tahunAjarans' => Kelas::active()->select('thn_ajaran')
                 ->distinct()
                 ->orderByDesc('thn_ajaran')
                 ->get(),
-            'kelas' => $tahun
-                ? Kelas::active()->where('thn_ajaran', $tahun)
+            'kelas' => $tahun && $semester
+                ? Kelas::active()->where('thn_ajaran', $tahun)->where('semester', $semester)
                     ->orderBy('nama_kelas')
-                    ->get(['id', 'nama_kelas', 'thn_ajaran'])
+                    ->get(['id', 'nama_kelas', 'thn_ajaran', 'semester'])
                 : [],
         ]);
     }
@@ -157,6 +158,7 @@ class SiswaController extends Controller
                     'password',
                     'password_confirmation',
                     'thn_ajaran',
+                    'semester',
                     'foto_profil',
                     'akta_kelahiran_file',
                     'kartu_keluarga_file',
@@ -207,8 +209,9 @@ class SiswaController extends Controller
     {
         $this->currentSiswaManager();
 
-        $siswa->load(['user:id,name,email,status,foto_profil', 'kelas:id,nama_kelas,thn_ajaran']);
+        $siswa->load(['user:id,name,email,status,foto_profil', 'kelas:id,nama_kelas,thn_ajaran,semester']);
         $tahun = request()->query('thn_ajaran', $siswa->kelas->thn_ajaran);
+        $semester = request()->integer('semester') ?: $siswa->kelas->semester;
 
         return Inertia::render('Siswa/Edit', [
             'siswa' => $siswa,
@@ -216,9 +219,9 @@ class SiswaController extends Controller
                 ->distinct()
                 ->orderByDesc('thn_ajaran')
                 ->get(),
-            'kelas' => Kelas::active()->where('thn_ajaran', $tahun)
+            'kelas' => Kelas::active()->where('thn_ajaran', $tahun)->where('semester', $semester)
                 ->orderBy('nama_kelas')
-                ->get(['id', 'nama_kelas', 'thn_ajaran']),
+                ->get(['id', 'nama_kelas', 'thn_ajaran', 'semester']),
         ]);
     }
 
@@ -252,6 +255,7 @@ class SiswaController extends Controller
                 'password',
                 'password_confirmation',
                 'thn_ajaran',
+                'semester',
                 'foto_profil',
                 'akta_kelahiran_file',
                 'kartu_keluarga_file',

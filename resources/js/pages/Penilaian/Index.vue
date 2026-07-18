@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, router, useForm, usePage } from '@inertiajs/vue3';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { getCoreRowModel, useVueTable } from '@tanstack/vue-table';
 import type { ColumnDef } from '@tanstack/vue-table';
 import { computed, ref, watch } from 'vue';
@@ -37,6 +37,20 @@ interface KomponenPenilaian {
     nama_komponen: string;
     deskripsi: string | null;
 }
+interface Tema {
+    id: number;
+    nama_tema: string;
+}
+interface SubTema {
+    id: number;
+    tema_id: number;
+    nama_sub_tema: string;
+}
+interface SummaryStudent {
+    id: number;
+    nama: string;
+    nis: string | null;
+}
 interface Absen {
     id: number;
     status: StatusAbsen;
@@ -60,21 +74,35 @@ const komponenPenilaians = computed(
     () => page.props.komponenPenilaians as KomponenPenilaian[],
 );
 const lockedSiswaIds = computed(() => page.props.lockedSiswaIds as number[]);
+const temas = computed(() => page.props.temas as Tema[]);
+const subTemas = computed(() => page.props.subTemas as SubTema[]);
+const summaryStudents = computed(
+    () => page.props.summaryStudents as SummaryStudent[],
+);
 const filters = computed(
     () =>
         page.props.filters as {
             kelas_id: string | null;
             jadwal_id: string | null;
+            summary: boolean;
+            tema_id: string | null;
+            sub_tema_id: string | null;
         },
 );
 const selectedKelas = ref(filters.value.kelas_id ?? '');
 const selectedJadwal = ref(filters.value.jadwal_id ?? '');
+const isSummary = ref(filters.value.summary ?? false);
+const selectedTema = ref(filters.value.tema_id ?? '');
+const selectedSubTema = ref(filters.value.sub_tema_id ?? '');
 const selectedAbsen = ref<Absen | null>(null);
 const isLoading = ref(false);
 
 watch(filters, (value) => {
     selectedKelas.value = value.kelas_id ?? '';
     selectedJadwal.value = value.jadwal_id ?? '';
+    isSummary.value = value.summary ?? false;
+    selectedTema.value = value.tema_id ?? '';
+    selectedSubTema.value = value.sub_tema_id ?? '';
 });
 
 const nilaiForm = useForm<PenilaianForm>({
@@ -86,12 +114,18 @@ const nilaiForm = useForm<PenilaianForm>({
     keterangan: '',
 });
 
-const loadData = (kelasId: string, jadwalId = '') => {
+const loadData = () => {
     isLoading.value = true;
 
     router.get(
         PenilaianController.index().url,
-        { kelas_id: kelasId, jadwal_id: jadwalId },
+        {
+            kelas_id: selectedKelas.value,
+            jadwal_id: isSummary.value ? '' : selectedJadwal.value,
+            summary: isSummary.value ? 1 : 0,
+            tema_id: isSummary.value ? selectedTema.value : '',
+            sub_tema_id: isSummary.value ? selectedSubTema.value : '',
+        },
         {
             preserveState: true,
             preserveScroll: true,
@@ -104,9 +138,28 @@ const loadData = (kelasId: string, jadwalId = '') => {
 };
 const changeKelas = () => {
     selectedJadwal.value = '';
-    loadData(selectedKelas.value);
+    selectedTema.value = '';
+    selectedSubTema.value = '';
+    loadData();
 };
-const changeJadwal = () => loadData(selectedKelas.value, selectedJadwal.value);
+const changeJadwal = () => loadData();
+const changeSummary = () => {
+    selectedJadwal.value = '';
+    selectedTema.value = '';
+    selectedSubTema.value = '';
+    loadData();
+};
+const changeTema = () => {
+    selectedSubTema.value = '';
+    loadData();
+};
+const changeSubTema = () => loadData();
+const summaryDetailUrl = (siswaId: number) =>
+    `/penilaian/summary/${siswaId}?${new URLSearchParams({
+        kelas_id: selectedKelas.value,
+        tema_id: selectedTema.value,
+        sub_tema_id: selectedSubTema.value,
+    }).toString()}`;
 const isLocked = (absen: Absen) =>
     lockedSiswaIds.value.includes(absen.siswa.id);
 const canAssess = (absen: Absen) =>
@@ -192,7 +245,10 @@ const table = useVueTable({
         <div
             class="rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm"
         >
-            <p v-if="selectedJadwal" class="mb-4 text-sm text-muted-foreground">
+            <p
+                v-if="selectedJadwal && !isSummary"
+                class="mb-4 text-sm text-muted-foreground"
+            >
                 Tema:
                 {{
                     jadwals.find((item) => item.id === Number(selectedJadwal))
@@ -225,7 +281,7 @@ const table = useVueTable({
                         </option>
                     </select>
                 </div>
-                <div class="space-y-2">
+                <div v-if="!isSummary" class="space-y-2">
                     <label for="jadwal_id" class="text-sm font-medium"
                         >Jadwal</label
                     ><select
@@ -247,14 +303,68 @@ const table = useVueTable({
                         </option>
                     </select>
                 </div>
+                <div v-else class="space-y-2">
+                    <label for="tema_id" class="text-sm font-medium"
+                        >Tema</label
+                    >
+                    <select
+                        id="tema_id"
+                        v-model="selectedTema"
+                        :disabled="!selectedKelas || isLoading"
+                        class="h-9 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                        @change="changeTema"
+                    >
+                        <option value="">Pilih tema</option>
+                        <option
+                            v-for="item in temas"
+                            :key="item.id"
+                            :value="String(item.id)"
+                        >
+                            {{ item.nama_tema }}
+                        </option>
+                    </select>
+                </div>
+                <div v-if="isSummary" class="space-y-2">
+                    <label for="sub_tema_id" class="text-sm font-medium"
+                        >Sub Tema</label
+                    >
+                    <select
+                        id="sub_tema_id"
+                        v-model="selectedSubTema"
+                        :disabled="!selectedTema || isLoading"
+                        class="h-9 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                        @change="changeSubTema"
+                    >
+                        <option value="">Pilih sub tema</option>
+                        <option
+                            v-for="item in subTemas"
+                            :key="item.id"
+                            :value="String(item.id)"
+                        >
+                            {{ item.nama_sub_tema }}
+                        </option>
+                    </select>
+                </div>
             </div>
+            <label
+                class="mt-4 flex w-fit cursor-pointer items-center gap-2 text-sm font-medium"
+            >
+                <input
+                    v-model="isSummary"
+                    type="checkbox"
+                    :disabled="isLoading"
+                    class="size-4 rounded border-border"
+                    @change="changeSummary"
+                />
+                Summary
+            </label>
             <p v-if="isLoading" class="mt-4 text-sm text-muted-foreground">
                 Memuat data...
             </p>
         </div>
 
         <div
-            v-if="selectedJadwal"
+            v-if="!isSummary && selectedJadwal"
             class="overflow-x-auto rounded-xl border border-border bg-card text-card-foreground"
         >
             <table class="w-full min-w-max">
@@ -361,6 +471,56 @@ const table = useVueTable({
                             class="py-8 text-center text-muted-foreground"
                         >
                             Belum ada data absensi pada jadwal ini
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div
+            v-if="isSummary && selectedSubTema"
+            class="overflow-x-auto rounded-xl border border-border bg-card text-card-foreground"
+        >
+            <table class="w-full min-w-max">
+                <thead class="bg-muted/50">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-sm font-medium">
+                            No
+                        </th>
+                        <th class="px-4 py-3 text-left text-sm font-medium">
+                            Nama Siswa
+                        </th>
+                        <th class="px-4 py-3 text-left text-sm font-medium">
+                            NIS
+                        </th>
+                        <th class="px-4 py-3 text-left text-sm font-medium">
+                            Aksi
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr
+                        v-for="(siswa, index) in summaryStudents"
+                        :key="siswa.id"
+                        class="border-t border-border hover:bg-muted/50"
+                    >
+                        <td class="px-4 py-3">{{ index + 1 }}</td>
+                        <td class="px-4 py-3">{{ siswa.nama }}</td>
+                        <td class="px-4 py-3">{{ siswa.nis ?? '-' }}</td>
+                        <td class="px-4 py-3">
+                            <Button as-child>
+                                <Link :href="summaryDetailUrl(siswa.id)"
+                                    >Detail</Link
+                                >
+                            </Button>
+                        </td>
+                    </tr>
+                    <tr v-if="!summaryStudents.length">
+                        <td
+                            colspan="4"
+                            class="py-8 text-center text-muted-foreground"
+                        >
+                            Belum ada data siswa pada tema dan sub tema ini
                         </td>
                     </tr>
                 </tbody>

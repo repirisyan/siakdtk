@@ -79,11 +79,14 @@ class SiswaRequest extends FormRequest
             'kabupaten_wali' => ['nullable', 'string', 'max:255'],
             'provinsi_wali' => ['nullable', 'string', 'max:255'],
             'thn_ajaran' => ['required', 'digits:4', 'exists:kelas,thn_ajaran'],
+            'semester' => ['required', 'integer', 'in:1,2'],
             'kelas_id' => [
                 'required',
                 'integer',
                 Rule::exists('kelas', 'id')->where(
-                    fn ($query) => $query->where('thn_ajaran', $this->input('thn_ajaran')),
+                    fn ($query) => $query
+                        ->where('thn_ajaran', $this->input('thn_ajaran'))
+                        ->where('semester', $this->integer('semester')),
                 ),
             ],
         ];
