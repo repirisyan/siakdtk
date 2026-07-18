@@ -2,7 +2,6 @@
 import { Head, router, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import {
-    FlexRender,
     getCoreRowModel,
     useVueTable,
     type ColumnDef,
