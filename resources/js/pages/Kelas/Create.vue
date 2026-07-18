@@ -19,6 +19,7 @@ defineOptions({
 const form = useForm({
     nama_kelas: '',
     thn_ajaran: '',
+    semester: '',
 });
 
 const submit = () => {
@@ -65,6 +66,22 @@ const submit = () => {
                         placeholder="Contoh: 2026"
                     />
                     <InputError :message="form.errors.thn_ajaran" />
+                </div>
+
+                <div class="space-y-2">
+                    <label for="semester" class="text-sm font-medium"
+                        >Semester</label
+                    >
+                    <select
+                        id="semester"
+                        v-model="form.semester"
+                        class="h-9 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground"
+                    >
+                        <option value="">Pilih semester</option>
+                        <option value="1">Semester 1</option>
+                        <option value="2">Semester 2</option>
+                    </select>
+                    <InputError :message="form.errors.semester" />
                 </div>
 
                 <div class="flex gap-2">

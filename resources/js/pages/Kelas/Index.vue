@@ -15,6 +15,7 @@ interface Kelas {
     id: number;
     nama_kelas: string;
     thn_ajaran: string;
+    semester: number;
     created_at: string;
     siswa_count: number;
     status: boolean;
@@ -46,6 +47,7 @@ const filters = computed(
             sort: string;
             direction: string;
             status: string | null;
+            semester: string | null;
         },
 );
 const kelasOptions = computed(() => page.props.kelasOptions as Kelas[]);
@@ -53,6 +55,7 @@ const canMoveStudents = computed(() => page.props.canMoveStudents as boolean);
 
 const search = ref(filters.value?.search ?? '');
 const status = ref(filters.value?.status ?? '');
+const semester = ref(filters.value?.semester ?? '');
 const selectedKelas = ref<Kelas | null>(null);
 const moveForm = useForm({
     kelas_tujuan_id: '',
@@ -80,6 +83,7 @@ const applySearch = () => {
             sort: filters.value.sort,
             direction: filters.value.direction,
             status: status.value,
+            semester: semester.value,
         },
         {
             preserveState: true,
@@ -101,6 +105,7 @@ const changeSort = (column: string) => {
             sort: column,
             direction,
             status: status.value,
+            semester: semester.value,
         },
         {
             preserveState: true,
@@ -160,6 +165,7 @@ const columns: ColumnDef<Kelas>[] = [
     { accessorKey: 'id', header: 'ID' },
     { accessorKey: 'nama_kelas', header: 'Nama Kelas' },
     { accessorKey: 'thn_ajaran', header: 'Tahun Ajaran' },
+    { accessorKey: 'semester', header: 'Semester' },
     { accessorKey: 'status', header: 'Status' },
     {
         accessorKey: 'created_at',
@@ -205,6 +211,15 @@ const table = useVueTable({
                 <option value="aktif">Aktif</option>
                 <option value="nonaktif">Nonaktif</option>
             </select>
+            <select
+                v-model="semester"
+                class="h-10 rounded-lg border border-border bg-background px-3 text-sm text-foreground"
+                @change="applySearch"
+            >
+                <option value="">Semua Semester</option>
+                <option value="1">Semester 1</option>
+                <option value="2">Semester 2</option>
+            </select>
         </div>
 
         <div
@@ -230,6 +245,13 @@ const table = useVueTable({
                         <SortableTableHeader
                             label="Tahun Ajaran"
                             column="thn_ajaran"
+                            :sort="filters.sort"
+                            :direction="filters.direction"
+                            @sort="changeSort"
+                        />
+                        <SortableTableHeader
+                            label="Semester"
+                            column="semester"
                             :sort="filters.sort"
                             :direction="filters.direction"
                             @sort="changeSort"
@@ -261,6 +283,9 @@ const table = useVueTable({
                         <td class="px-4 py-3">{{ row.original.id }}</td>
                         <td class="px-4 py-3">{{ row.original.nama_kelas }}</td>
                         <td class="px-4 py-3">{{ row.original.thn_ajaran }}</td>
+                        <td class="px-4 py-3">
+                            Semester {{ row.original.semester }}
+                        </td>
                         <td class="px-4 py-3">
                             <span
                                 class="rounded-full px-2 py-1 text-xs font-medium"
@@ -314,7 +339,7 @@ const table = useVueTable({
 
                     <tr v-if="!table.getRowModel().rows.length">
                         <td
-                            colspan="6"
+                            colspan="7"
                             class="py-8 text-center text-muted-foreground"
                         >
                             Tidak ada data
@@ -391,7 +416,8 @@ const table = useVueTable({
                                 :key="item.id"
                                 :value="String(item.id)"
                             >
-                                {{ item.nama_kelas }} - {{ item.thn_ajaran }}
+                                {{ item.nama_kelas }} - {{ item.thn_ajaran }} -
+                                Semester {{ item.semester }}
                             </option>
                         </select>
                         <InputError

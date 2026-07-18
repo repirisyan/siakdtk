@@ -199,6 +199,16 @@ class SiswaFactory extends Factory
 
             'nama_wali' => $this->faker->optional()->name(),
 
+            'alamat_wali' => $this->faker->address(),
+
+            'desa_wali' => $this->faker->city(),
+
+            'kecamatan_wali' => $this->faker->city(),
+
+            'kabupaten_wali' => $this->faker->city(),
+
+            'provinsi_wali' => $this->faker->state(),
+
         ];
     }
 }

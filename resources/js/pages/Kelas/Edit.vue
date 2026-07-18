@@ -12,6 +12,7 @@ interface Kelas {
     id: number;
     nama_kelas: string;
     thn_ajaran: string;
+    semester: number;
 }
 
 defineOptions({
@@ -29,6 +30,7 @@ const kelas = computed(() => page.props.kelas as Kelas);
 const form = useForm({
     nama_kelas: kelas.value?.nama_kelas ?? '',
     thn_ajaran: kelas.value?.thn_ajaran ?? '',
+    semester: kelas.value?.semester ? String(kelas.value.semester) : '',
 });
 
 watch(
@@ -36,6 +38,7 @@ watch(
     (value) => {
         form.nama_kelas = value?.nama_kelas ?? '';
         form.thn_ajaran = value?.thn_ajaran ?? '';
+        form.semester = value?.semester ? String(value.semester) : '';
     },
     { immediate: true },
 );
@@ -82,6 +85,22 @@ const submit = () => {
                         placeholder="Contoh: 2026"
                     />
                     <InputError :message="form.errors.thn_ajaran" />
+                </div>
+
+                <div class="space-y-2">
+                    <label for="semester" class="text-sm font-medium"
+                        >Semester</label
+                    >
+                    <select
+                        id="semester"
+                        v-model="form.semester"
+                        class="h-9 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground"
+                    >
+                        <option value="">Pilih semester</option>
+                        <option value="1">Semester 1</option>
+                        <option value="2">Semester 2</option>
+                    </select>
+                    <InputError :message="form.errors.semester" />
                 </div>
 
                 <div class="flex gap-2">

@@ -155,16 +155,22 @@ const approveAll = () => {
         { preserveScroll: true },
     );
 };
+const openPrint = (url: string) => {
+    const printWindow = window.open(url, '_blank');
+
+    if (!printWindow) {
+        window.location.assign(url);
+    }
+};
 const printClass = () => {
     if (selectedKelasData.value) {
-        window.open(
-            `/hasil-akhir-rapor/kelas/${selectedKelasData.value.id}/cetak`,
-            '_blank',
+        openPrint(
+            RaporAkhirController.printClass(selectedKelasData.value.id).url,
         );
     }
 };
 const printStudent = (rapor: RaporAkhir) => {
-    window.open(`/hasil-akhir-rapor/${rapor.id}/cetak`, '_blank');
+    openPrint(RaporAkhirController.printStudent(rapor.id).url);
 };
 const referenceFor = () =>
     !modal.value

@@ -10,6 +10,7 @@ interface Kelas {
     id: number;
     nama_kelas: string;
     thn_ajaran: string;
+    semester: number;
 }
 
 defineOptions({
@@ -45,6 +46,10 @@ const kelas = computed(() => page.props.kelas as Kelas);
                 <div>
                     <dt class="text-sm text-muted-foreground">Tahun Ajaran</dt>
                     <dd class="font-medium">{{ kelas.thn_ajaran }}</dd>
+                </div>
+                <div>
+                    <dt class="text-sm text-muted-foreground">Semester</dt>
+                    <dd class="font-medium">Semester {{ kelas.semester }}</dd>
                 </div>
             </dl>
 

@@ -29,6 +29,8 @@ class KelasFactory extends Factory
 
             ),
 
+            'semester' => $this->faker->numberBetween(1, 2),
+
             'status' => true,
 
         ];

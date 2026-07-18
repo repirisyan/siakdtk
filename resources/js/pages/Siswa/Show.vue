@@ -42,6 +42,10 @@ interface Siswa {
     pekerjaan_wali: string | null;
     penghasilan_wali: string | null;
     alamat_wali: string | null;
+    desa_wali: string | null;
+    kecamatan_wali: string | null;
+    kabupaten_wali: string | null;
+    provinsi_wali: string | null;
     akta_kelahiran_file: string | null;
     kartu_keluarga_file: string | null;
     kelas_id: number;
@@ -127,6 +131,10 @@ const guardianDetails = computed<Detail[]>(() => [
     ['Pekerjaan Wali', siswa.value.pekerjaan_wali],
     ['Penghasilan Wali', siswa.value.penghasilan_wali],
     ['Alamat Wali', siswa.value.alamat_wali],
+    ['Desa / Kelurahan Wali', siswa.value.desa_wali],
+    ['Kecamatan Wali', siswa.value.kecamatan_wali],
+    ['Kabupaten / Kota Wali', siswa.value.kabupaten_wali],
+    ['Provinsi Wali', siswa.value.provinsi_wali],
 ]);
 const documentUrl = (path: string | null) => (path ? `/storage/${path}` : null);
 </script>

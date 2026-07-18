@@ -51,6 +51,10 @@ interface SiswaForm {
     pekerjaan_wali: string;
     penghasilan_wali: string;
     alamat_wali: string;
+    desa_wali: string;
+    kecamatan_wali: string;
+    kabupaten_wali: string;
+    provinsi_wali: string;
     kelas_id: string;
 }
 
@@ -143,6 +147,10 @@ const fields: Field[] = [
     { name: 'pekerjaan_wali', label: 'Pekerjaan Wali' },
     { name: 'penghasilan_wali', label: 'Penghasilan Wali' },
     { name: 'alamat_wali', label: 'Alamat Wali' },
+    { name: 'desa_wali', label: 'Desa / Kelurahan Wali' },
+    { name: 'kecamatan_wali', label: 'Kecamatan Wali' },
+    { name: 'kabupaten_wali', label: 'Kabupaten / Kota Wali' },
+    { name: 'provinsi_wali', label: 'Provinsi Wali' },
 ];
 
 interface TahunAjaran {
@@ -202,6 +210,10 @@ const emptyForm: SiswaForm = {
     pekerjaan_wali: '',
     penghasilan_wali: '',
     alamat_wali: '',
+    desa_wali: '',
+    kecamatan_wali: '',
+    kabupaten_wali: '',
+    provinsi_wali: '',
     kelas_id: '',
 };
 const form = useForm<SiswaForm>({ ...emptyForm });

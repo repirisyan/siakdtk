@@ -165,7 +165,7 @@ class JadwalController extends Controller
         $canManageSchedule = $this->canManageSchedule($user);
 
         return [
-            'kelas' => Kelas::active()->orderBy('nama_kelas')->get(['id', 'nama_kelas', 'thn_ajaran']),
+            'kelas' => Kelas::active()->orderBy('nama_kelas')->get(['id', 'nama_kelas', 'thn_ajaran', 'semester']),
             'gurus' => $canManageSchedule
                 ? Guru::orderBy('nama')->get(['id', 'nama', 'nip'])
                 : [],

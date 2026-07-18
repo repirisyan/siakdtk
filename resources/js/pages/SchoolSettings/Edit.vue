@@ -11,6 +11,10 @@ interface SchoolSetting {
     nama_sekolah: string;
     logo_url: string | null;
     alamat: string | null;
+    desa: string | null;
+    kecamatan: string | null;
+    kabupaten: string | null;
+    provinsi: string | null;
     nomor_telepon: string | null;
     email: string | null;
     website: string | null;
@@ -29,6 +33,10 @@ const form = useForm({
     nama_sekolah: setting.value.nama_sekolah,
     logo: null as File | null,
     alamat: setting.value.alamat ?? '',
+    desa: setting.value.desa ?? '',
+    kecamatan: setting.value.kecamatan ?? '',
+    kabupaten: setting.value.kabupaten ?? '',
+    provinsi: setting.value.provinsi ?? '',
     nomor_telepon: setting.value.nomor_telepon ?? '',
     email: setting.value.email ?? '',
     website: setting.value.website ?? '',
@@ -195,6 +203,34 @@ defineOptions({
                             v-model="form.alamat"
                             class="min-h-24 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
                         /><InputError :message="form.errors.alamat" />
+                    </div>
+                    <div class="space-y-2">
+                        <label for="desa" class="text-sm font-medium"
+                            >Desa / Kelurahan</label
+                        >
+                        <Input id="desa" v-model="form.desa" />
+                        <InputError :message="form.errors.desa" />
+                    </div>
+                    <div class="space-y-2">
+                        <label for="kecamatan" class="text-sm font-medium"
+                            >Kecamatan</label
+                        >
+                        <Input id="kecamatan" v-model="form.kecamatan" />
+                        <InputError :message="form.errors.kecamatan" />
+                    </div>
+                    <div class="space-y-2">
+                        <label for="kabupaten" class="text-sm font-medium"
+                            >Kabupaten / Kota</label
+                        >
+                        <Input id="kabupaten" v-model="form.kabupaten" />
+                        <InputError :message="form.errors.kabupaten" />
+                    </div>
+                    <div class="space-y-2">
+                        <label for="provinsi" class="text-sm font-medium"
+                            >Provinsi</label
+                        >
+                        <Input id="provinsi" v-model="form.provinsi" />
+                        <InputError :message="form.errors.provinsi" />
                     </div>
                 </div>
             </section>

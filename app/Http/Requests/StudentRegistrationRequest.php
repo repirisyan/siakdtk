@@ -56,6 +56,10 @@ class StudentRegistrationRequest extends FormRequest
             'pekerjaan_wali' => ['nullable', 'string', 'max:255'],
             'penghasilan_wali' => ['nullable', 'string', 'max:255'],
             'alamat_wali' => ['nullable', 'string', 'max:1000'],
+            'desa_wali' => ['nullable', 'string', 'max:255'],
+            'kecamatan_wali' => ['nullable', 'string', 'max:255'],
+            'kabupaten_wali' => ['nullable', 'string', 'max:255'],
+            'provinsi_wali' => ['nullable', 'string', 'max:255'],
         ];
     }
 }

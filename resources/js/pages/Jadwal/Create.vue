@@ -12,6 +12,7 @@ interface Kelas {
     id: number;
     nama_kelas: string;
     thn_ajaran: string;
+    semester: number;
 }
 interface Guru {
     id: number;
@@ -75,7 +76,8 @@ const submit = () => form.post(JadwalController.store().url);
                             :key="item.id"
                             :value="String(item.id)"
                         >
-                            {{ item.nama_kelas }} - {{ item.thn_ajaran }}
+                            {{ item.nama_kelas }} - {{ item.thn_ajaran }} -
+                            Semester {{ item.semester }}
                         </option></select
                     ><InputError :message="form.errors.kelas_id" />
                 </div>

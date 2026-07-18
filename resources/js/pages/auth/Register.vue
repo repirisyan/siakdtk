@@ -62,6 +62,10 @@ interface RegistrationForm {
     pekerjaan_wali: string;
     penghasilan_wali: string;
     alamat_wali: string;
+    desa_wali: string;
+    kecamatan_wali: string;
+    kabupaten_wali: string;
+    provinsi_wali: string;
 }
 type RegistrationField = Exclude<
     keyof RegistrationForm,
@@ -126,6 +130,10 @@ const guardianFields: Field[] = [
     { name: 'agama_wali', label: 'Agama Wali', options: AGAMA_OPTIONS },
     { name: 'pekerjaan_wali', label: 'Pekerjaan Wali' },
     { name: 'penghasilan_wali', label: 'Penghasilan Wali' },
+    { name: 'desa_wali', label: 'Desa / Kelurahan Wali' },
+    { name: 'kecamatan_wali', label: 'Kecamatan Wali' },
+    { name: 'kabupaten_wali', label: 'Kabupaten / Kota Wali' },
+    { name: 'provinsi_wali', label: 'Provinsi Wali' },
 ];
 const registrationSteps: { label: string; icon: Component }[] = [
     { label: 'Data Akun', icon: LockKeyhole },
@@ -189,6 +197,10 @@ const form = useForm<RegistrationForm>({
     pekerjaan_wali: '',
     penghasilan_wali: '',
     alamat_wali: '',
+    desa_wali: '',
+    kecamatan_wali: '',
+    kabupaten_wali: '',
+    provinsi_wali: '',
 });
 const photoPreview = ref<string | null>(null);
 const fileInputRef = ref<HTMLInputElement | null>(null);

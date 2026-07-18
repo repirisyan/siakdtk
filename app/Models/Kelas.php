@@ -15,7 +15,10 @@ class Kelas extends Model
 
     protected function casts(): array
     {
-        return ['status' => 'boolean'];
+        return [
+            'semester' => 'integer',
+            'status' => 'boolean',
+        ];
     }
 
     public function scopeActive(Builder $query): Builder

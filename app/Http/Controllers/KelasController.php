@@ -20,13 +20,20 @@ class KelasController extends Controller
         $sort = request()->query('sort', 'id');
         $direction = request()->query('direction', 'desc');
         $status = request()->query('status');
+        $semester = request()->query('semester');
 
         $kelas = Kelas::query()
             ->withCount('siswa')
             ->when($search, function ($query, $search) {
-                $query->where('nama_kelas', 'like', "%{$search}%");
+                $query->where(function ($query) use ($search) {
+                    $query
+                        ->where('nama_kelas', 'like', "%{$search}%")
+                        ->orWhere('thn_ajaran', 'like', "%{$search}%")
+                        ->orWhere('semester', 'like', "%{$search}%");
+                });
             })
             ->when(in_array($status, ['aktif', 'nonaktif'], true), fn ($query) => $query->where('status', $status === 'aktif'))
+            ->when(in_array((int) $semester, [1, 2], true), fn ($query) => $query->where('semester', (int) $semester))
             ->orderBy($sort, $direction)
             ->paginate(10)
             ->withQueryString();
@@ -38,8 +45,9 @@ class KelasController extends Controller
                 'sort' => $sort,
                 'direction' => $direction,
                 'status' => $status,
+                'semester' => $semester,
             ],
-            'kelasOptions' => Kelas::active()->orderBy('nama_kelas')->get(['id', 'nama_kelas', 'thn_ajaran']),
+            'kelasOptions' => Kelas::active()->orderBy('nama_kelas')->get(['id', 'nama_kelas', 'thn_ajaran', 'semester']),
             'canMoveStudents' => auth()->user()?->loadMissing('role')->hasRole('Admin') ?? false,
         ]);
     }

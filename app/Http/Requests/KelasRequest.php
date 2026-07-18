@@ -16,6 +16,7 @@ class KelasRequest extends FormRequest
         return [
             'nama_kelas' => ['required', 'string', 'max:255'],
             'thn_ajaran' => ['required', 'digits:4'],
+            'semester' => ['required', 'integer', 'in:1,2'],
         ];
     }
 }

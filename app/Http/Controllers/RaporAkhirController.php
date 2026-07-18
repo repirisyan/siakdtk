@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\RaporAkhirDetailRequest;
+use App\Models\Absen;
 use App\Models\Kelas;
 use App\Models\Nilai;
 use App\Models\RaporAkhir;
@@ -138,7 +139,7 @@ class RaporAkhirController extends Controller
     {
         $this->authorizeKelas($this->currentUser(), $kelas->id);
 
-        $rapors = RaporAkhir::with(['siswa:id,nama,nis,kelas_id', 'details.tema:id,nama_tema', 'details.guru:id,nama,nip', 'approver:id,name'])
+        $rapors = RaporAkhir::with($this->printRelations())
             ->where('kelas_id', $kelas->id)
             ->where('thn_ajaran', $kelas->thn_ajaran)
             ->where('status', 'disetujui')
@@ -147,16 +148,49 @@ class RaporAkhirController extends Controller
 
         abort_unless($rapors->isNotEmpty(), 404, 'Belum ada Rapor Akhir yang disetujui untuk kelas ini.');
 
-        return view('rapor-akhir.print', ['school' => SchoolSetting::current(), 'kelas' => $kelas, 'rapors' => $rapors]);
+        return view('rapor-akhir.print', [
+            'school' => SchoolSetting::current(),
+            'kelas' => $kelas,
+            'rapors' => $rapors,
+            'attendance' => $this->attendanceBySiswa($rapors, $kelas),
+        ]);
     }
 
     public function printStudent(RaporAkhir $raporAkhir)
     {
         $this->authorizeKelas($this->currentUser(), $raporAkhir->kelas_id);
         abort_unless($raporAkhir->status === 'disetujui', 403);
-        $raporAkhir->load(['siswa:id,nama,nis,kelas_id', 'kelas:id,nama_kelas,thn_ajaran', 'details.tema:id,nama_tema', 'details.guru:id,nama,nip', 'approver:id,name']);
+        $raporAkhir->load($this->printRelations());
 
-        return view('rapor-akhir.print', ['school' => SchoolSetting::current(), 'kelas' => $raporAkhir->kelas, 'rapors' => collect([$raporAkhir])]);
+        return view('rapor-akhir.print', [
+            'school' => SchoolSetting::current(),
+            'kelas' => $raporAkhir->kelas,
+            'rapors' => collect([$raporAkhir]),
+            'attendance' => $this->attendanceBySiswa(collect([$raporAkhir]), $raporAkhir->kelas),
+        ]);
+    }
+
+    private function printRelations(): array
+    {
+        return [
+            'siswa:id,kelas_id,nama,nis,nisn,tmp_lahir,tgl_lahir,jk,agama,anak_ke,nama_ayah,nama_ibu,nohp_ayah,nohp_ibu,pekerjaan,pekerjaan_ibu,alamat,desa_wali,kecamatan_wali,kabupaten_wali,provinsi_wali,tinggi_bdn,berat_bdn',
+            'kelas:id,nama_kelas,thn_ajaran,semester',
+            'details.tema:id,nama_tema',
+            'details.guru:id,nama,nip',
+            'approver:id,name',
+            'approver.guru:id,user_id,nip',
+        ];
+    }
+
+    private function attendanceBySiswa($rapors, Kelas $kelas)
+    {
+        return Absen::query()
+            ->selectRaw("siswa_id, SUM(CASE WHEN status = 'hadir' THEN 1 ELSE 0 END) as hadir, SUM(CASE WHEN status = 'izin' THEN 1 ELSE 0 END) as izin, SUM(CASE WHEN status = 'sakit' THEN 1 ELSE 0 END) as sakit, SUM(CASE WHEN status = 'alfa' THEN 1 ELSE 0 END) as alfa")
+            ->whereIn('siswa_id', $rapors->pluck('siswa_id'))
+            ->whereHas('jadwal', fn ($query) => $query->where('kelas_id', $kelas->id))
+            ->groupBy('siswa_id')
+            ->get()
+            ->keyBy('siswa_id');
     }
 
     private function temaIds(int $kelasId, string|int $tahunAjaran)
