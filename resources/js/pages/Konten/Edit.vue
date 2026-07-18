@@ -3,8 +3,8 @@ import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 
 import KontenController from '@/actions/App/Http/Controllers/KontenController';
-import KontenForm from '@/components/KontenForm.vue';
 import InputError from '@/components/InputError.vue';
+import KontenForm from '@/components/KontenForm.vue';
 import Button from '@/components/ui/button/Button.vue';
 import Input from '@/components/ui/input/Input.vue';
 
@@ -32,7 +32,7 @@ const page = usePage();
 const konten = computed(() => page.props.konten as Konten);
 const dateTimeLocal = (value: string | null) =>
     value ? value.slice(0, 16) : '';
-const form = useForm({
+const formState = useForm({
     jenis_konten: konten.value.jenis_konten,
     judul: konten.value.judul,
     ringkasan: konten.value.ringkasan ?? '',
@@ -44,6 +44,10 @@ const form = useForm({
     jam_mulai: konten.value.jam_mulai?.slice(0, 5) ?? '',
     jam_selesai: konten.value.jam_selesai?.slice(0, 5) ?? '',
     lokasi: konten.value.lokasi ?? '',
+});
+const form = computed({
+    get: () => formState,
+    set: (value) => Object.assign(formState, value),
 });
 const galleryForm = useForm({
     gambar: [] as File[],
@@ -60,7 +64,7 @@ const setGalleryFiles = (event: Event) => {
     galleryForm.urutan = galleryFiles.value.map((_, index) => index + 1);
 };
 const submit = () =>
-    form.put(KontenController.update(konten.value.id).url, {
+    formState.put(KontenController.update(konten.value.id).url, {
         forceFormData: true,
     });
 const uploadGallery = () =>
@@ -71,8 +75,9 @@ const uploadGallery = () =>
         },
     });
 const removeGallery = (id: number) => {
-    if (confirm('Hapus foto ini?'))
+    if (confirm('Hapus foto ini?')) {
         router.delete(`/konten/${konten.value.id}/galeri/${id}`);
+    }
 };
 </script>
 
@@ -89,10 +94,10 @@ const removeGallery = (id: number) => {
             class="space-y-6 rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm"
             @submit.prevent="submit"
         >
-            <KontenForm :form="form" />
+            <KontenForm v-model:form="form" />
             <div class="flex gap-2">
-                <Button type="submit" :disabled="form.processing">{{
-                    form.processing ? 'Menyimpan...' : 'Simpan Perubahan'
+                <Button type="submit" :disabled="formState.processing">{{
+                    formState.processing ? 'Menyimpan...' : 'Simpan Perubahan'
                 }}</Button
                 ><Button as-child variant="outline"
                     ><Link :href="KontenController.index().url"

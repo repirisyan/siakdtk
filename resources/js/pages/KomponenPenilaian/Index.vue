@@ -27,8 +27,9 @@ const components = computed(
         },
 );
 const remove = (id: number) => {
-    if (window.confirm('Hapus komponen penilaian ini?'))
-        router.delete(`/komponen-penilaian/${id}`);
+    if (window.confirm('Hapus komponen penilaian ini?')) {
+router.delete(`/komponen-penilaian/${id}`);
+}
 };
 </script>
 

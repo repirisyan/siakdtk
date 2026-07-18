@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue';
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
+import { computed, watch } from 'vue';
 
 import TemaController from '@/actions/App/Http/Controllers/TemaController';
 

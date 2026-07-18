@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
+import JenisPembayaranController from '@/actions/App/Http/Controllers/JenisPembayaranController';
+import InputError from '@/components/InputError.vue';
 import Button from '@/components/ui/button/Button.vue';
 import Input from '@/components/ui/input/Input.vue';
-import InputError from '@/components/InputError.vue';
-import JenisPembayaranController from '@/actions/App/Http/Controllers/JenisPembayaranController';
 const page = usePage();
 const item = computed(
     () =>

@@ -64,11 +64,14 @@ const changeSort = (column: string) =>
             : 'asc',
     );
 const visit = (url: string | null) => {
-    if (url) router.visit(url, { preserveState: true, preserveScroll: true });
+    if (url) {
+router.visit(url, { preserveState: true, preserveScroll: true });
+}
 };
 const remove = (id: number) => {
-    if (confirm('Hapus konten ini?'))
-        router.delete(KontenController.destroy(id).url);
+    if (confirm('Hapus konten ini?')) {
+router.delete(KontenController.destroy(id).url);
+}
 };
 const date = (value: string | null) =>
     value ? new Date(value).toLocaleString('id-ID') : '-';

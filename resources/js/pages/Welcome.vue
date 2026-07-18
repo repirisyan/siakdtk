@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { Head, Link, usePage } from '@inertiajs/vue3';
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import {
     ArrowRight,
     CalendarDays,
@@ -16,10 +15,11 @@ import {
     Users,
     X,
 } from '@lucide/vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 
 import AppLogoIcon from '@/components/AppLogoIcon.vue';
-import { useAppearance } from '@/composables/useAppearance';
 import Button from '@/components/ui/button/Button.vue';
+import { useAppearance } from '@/composables/useAppearance';
 import { dashboard, login, register } from '@/routes';
 
 interface Konten {

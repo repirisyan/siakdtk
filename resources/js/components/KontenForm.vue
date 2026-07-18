@@ -5,27 +5,47 @@ import InputError from '@/components/InputError.vue';
 import KontenEditor from '@/components/KontenEditor.vue';
 import Input from '@/components/ui/input/Input.vue';
 
-const props = defineProps<{
-    form: {
-        jenis_konten: string;
-        judul: string;
-        ringkasan: string;
-        konten: string;
-        thumbnail: File | null;
-        tanggal_publish: string;
-        status: string;
-        tanggal_event: string;
-        jam_mulai: string;
-        jam_selesai: string;
-        lokasi: string;
-        errors: Record<string, string | undefined>;
-    };
-}>();
+interface KontenFormModel {
+    jenis_konten: string;
+    judul: string;
+    ringkasan: string;
+    konten: string;
+    thumbnail: File | null;
+    tanggal_publish: string;
+    status: string;
+    tanggal_event: string;
+    jam_mulai: string;
+    jam_selesai: string;
+    lokasi: string;
+    errors: Record<string, string | undefined>;
+}
 
-const isEvent = computed(() => props.form.jenis_konten === 'event');
+const form = defineModel<KontenFormModel>('form', { required: true });
+
+const fieldModel = <K extends keyof KontenFormModel>(field: K) =>
+    computed({
+        get: () => form.value[field],
+        set: (value: KontenFormModel[K]) => {
+            form.value = { ...form.value, [field]: value };
+        },
+    });
+
+const jenisKonten = fieldModel('jenis_konten');
+const judul = fieldModel('judul');
+const ringkasan = fieldModel('ringkasan');
+const konten = fieldModel('konten');
+const tanggalPublish = fieldModel('tanggal_publish');
+const status = fieldModel('status');
+const tanggalEvent = fieldModel('tanggal_event');
+const jamMulai = fieldModel('jam_mulai');
+const jamSelesai = fieldModel('jam_selesai');
+const lokasi = fieldModel('lokasi');
+const isEvent = computed(() => jenisKonten.value === 'event');
 const setThumbnail = (event: Event) => {
-    props.form.thumbnail =
-        (event.target as HTMLInputElement).files?.[0] ?? null;
+    form.value = {
+        ...form.value,
+        thumbnail: (event.target as HTMLInputElement).files?.[0] ?? null,
+    };
 };
 </script>
 
@@ -37,7 +57,7 @@ const setThumbnail = (event: Event) => {
             >
             <select
                 id="jenis_konten"
-                v-model="form.jenis_konten"
+                v-model="jenisKonten"
                 class="h-9 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground"
             >
                 <option value="berita">Berita</option>
@@ -50,7 +70,7 @@ const setThumbnail = (event: Event) => {
             <label for="status" class="text-sm font-medium">Status</label
             ><select
                 id="status"
-                v-model="form.status"
+                v-model="status"
                 class="h-9 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground"
             >
                 <option value="draft">Draft</option>
@@ -60,7 +80,7 @@ const setThumbnail = (event: Event) => {
     </div>
     <div class="space-y-2">
         <label for="judul" class="text-sm font-medium">Judul</label
-        ><Input id="judul" v-model="form.judul" /><InputError
+        ><Input id="judul" v-model="judul" /><InputError
             :message="form.errors.judul"
         />
     </div>
@@ -68,13 +88,13 @@ const setThumbnail = (event: Event) => {
         <label for="ringkasan" class="text-sm font-medium">Ringkasan</label
         ><textarea
             id="ringkasan"
-            v-model="form.ringkasan"
+            v-model="ringkasan"
             class="min-h-24 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
         /><InputError :message="form.errors.ringkasan" />
     </div>
     <div class="space-y-2">
         <label class="text-sm font-medium">Konten</label
-        ><KontenEditor v-model="form.konten" /><InputError
+        ><KontenEditor v-model="konten" /><InputError
             :message="form.errors.konten"
         />
     </div>
@@ -97,7 +117,7 @@ const setThumbnail = (event: Event) => {
                 >Tanggal Publish</label
             ><Input
                 id="tanggal_publish"
-                v-model="form.tanggal_publish"
+                v-model="tanggalPublish"
                 type="datetime-local"
             /><InputError :message="form.errors.tanggal_publish" />
         </div>
@@ -113,13 +133,13 @@ const setThumbnail = (event: Event) => {
                     >Tanggal Event</label
                 ><Input
                     id="tanggal_event"
-                    v-model="form.tanggal_event"
+                    v-model="tanggalEvent"
                     type="date"
                 /><InputError :message="form.errors.tanggal_event" />
             </div>
             <div class="space-y-2">
                 <label for="lokasi" class="text-sm font-medium">Lokasi</label
-                ><Input id="lokasi" v-model="form.lokasi" /><InputError
+                ><Input id="lokasi" v-model="lokasi" /><InputError
                     :message="form.errors.lokasi"
                 />
             </div>
@@ -128,7 +148,7 @@ const setThumbnail = (event: Event) => {
                     >Jam Mulai</label
                 ><Input
                     id="jam_mulai"
-                    v-model="form.jam_mulai"
+                    v-model="jamMulai"
                     type="time"
                 /><InputError :message="form.errors.jam_mulai" />
             </div>
@@ -137,7 +157,7 @@ const setThumbnail = (event: Event) => {
                     >Jam Selesai</label
                 ><Input
                     id="jam_selesai"
-                    v-model="form.jam_selesai"
+                    v-model="jamSelesai"
                     type="time"
                 /><InputError :message="form.errors.jam_selesai" />
             </div>

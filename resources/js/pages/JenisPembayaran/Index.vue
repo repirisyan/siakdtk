@@ -16,8 +16,9 @@ const items = computed(
         },
 );
 const remove = (id: number) => {
-    if (window.confirm('Hapus jenis pembayaran ini?'))
-        router.delete(`/jenis-pembayaran/${id}`);
+    if (window.confirm('Hapus jenis pembayaran ini?')) {
+router.delete(`/jenis-pembayaran/${id}`);
+}
 };
 </script>
 <template>

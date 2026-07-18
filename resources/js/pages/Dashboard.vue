@@ -1,8 +1,5 @@
 <script setup lang="ts">
 import { Head, Link, usePage } from '@inertiajs/vue3';
-import type { ApexOptions } from 'apexcharts';
-import VueApexCharts from 'vue3-apexcharts';
-import { computed } from 'vue';
 import {
     BookOpenCheck,
     CalendarDays,
@@ -14,6 +11,9 @@ import {
     Users,
     Wallet,
 } from '@lucide/vue';
+import type { ApexOptions } from 'apexcharts';
+import { computed } from 'vue';
+import VueApexCharts from 'vue3-apexcharts';
 
 import { index as raporAnakIndex } from '@/actions/App/Http/Controllers/RaporAnakController';
 import { index as tagihanSayaIndex } from '@/actions/App/Http/Controllers/TagihanSayaController';

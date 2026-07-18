@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
 import {
     BookOpen,
     LayoutGrid,
@@ -19,6 +18,23 @@ import {
     Settings,
     UserPlus,
 } from '@lucide/vue';
+import { computed } from 'vue';
+import { index as absensiIndex } from '@/actions/App/Http/Controllers/AbsenController';
+import { index as guruIndex } from '@/actions/App/Http/Controllers/GuruController';
+import { index as jadwalIndex } from '@/actions/App/Http/Controllers/JadwalController';
+import { index as jenisPembayaranIndex } from '@/actions/App/Http/Controllers/JenisPembayaranController';
+import { index as kelasIndex } from '@/actions/App/Http/Controllers/KelasController';
+import { index as kontenIndex } from '@/actions/App/Http/Controllers/KontenController';
+import { index as penilaianIndex } from '@/actions/App/Http/Controllers/PenilaianController';
+import { index as raporAkhirIndex } from '@/actions/App/Http/Controllers/RaporAkhirController';
+import { index as raporAnakIndex } from '@/actions/App/Http/Controllers/RaporAnakController';
+import { index as raporIndex } from '@/actions/App/Http/Controllers/RaporController';
+import { validationIndex as validasiRaporIndex } from '@/actions/App/Http/Controllers/RaporController';
+import { index as siswaIndex } from '@/actions/App/Http/Controllers/SiswaController';
+import { index as sppIndex } from '@/actions/App/Http/Controllers/SppController';
+import { index as tagihanSayaIndex } from '@/actions/App/Http/Controllers/TagihanSayaController';
+import { index as temaIndex } from '@/actions/App/Http/Controllers/TemaController';
+import { index as userIndex } from '@/actions/App/Http/Controllers/UserController';
 import AppLogo from '@/components/AppLogo.vue';
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
@@ -32,23 +48,6 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
-import { index as temaIndex } from '@/actions/App/Http/Controllers/TemaController';
-import { index as subTemaIndex } from '@/actions/App/Http/Controllers/SubTemaController';
-import { index as siswaIndex } from '@/actions/App/Http/Controllers/SiswaController';
-import { index as kelasIndex } from '@/actions/App/Http/Controllers/KelasController';
-import { index as guruIndex } from '@/actions/App/Http/Controllers/GuruController';
-import { index as jadwalIndex } from '@/actions/App/Http/Controllers/JadwalController';
-import { index as absensiIndex } from '@/actions/App/Http/Controllers/AbsenController';
-import { index as penilaianIndex } from '@/actions/App/Http/Controllers/PenilaianController';
-import { index as raporIndex } from '@/actions/App/Http/Controllers/RaporController';
-import { index as raporAkhirIndex } from '@/actions/App/Http/Controllers/RaporAkhirController';
-import { validationIndex as validasiRaporIndex } from '@/actions/App/Http/Controllers/RaporController';
-import { index as userIndex } from '@/actions/App/Http/Controllers/UserController';
-import { index as raporAnakIndex } from '@/actions/App/Http/Controllers/RaporAnakController';
-import { index as sppIndex } from '@/actions/App/Http/Controllers/SppController';
-import { index as jenisPembayaranIndex } from '@/actions/App/Http/Controllers/JenisPembayaranController';
-import { index as tagihanSayaIndex } from '@/actions/App/Http/Controllers/TagihanSayaController';
-import { index as kontenIndex } from '@/actions/App/Http/Controllers/KontenController';
 import type { NavItem } from '@/types';
 
 type RoleName =

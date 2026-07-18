@@ -23,7 +23,9 @@ const filters = computed(
     () => page.props.filters as { tema_id: string | null },
 );
 const remove = (id: number) => {
-    if (confirm('Hapus sub tema ini?')) router.delete(`/sub-tema/${id}`);
+    if (confirm('Hapus sub tema ini?')) {
+router.delete(`/sub-tema/${id}`);
+}
 };
 </script>
 <template>

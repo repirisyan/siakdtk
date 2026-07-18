@@ -2,8 +2,8 @@
 import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 import RaporAkhirController from '@/actions/App/Http/Controllers/RaporAkhirController';
-import Button from '@/components/ui/button/Button.vue';
 import InputError from '@/components/InputError.vue';
+import Button from '@/components/ui/button/Button.vue';
 
 interface Kelas {
     id: number;
@@ -109,7 +109,10 @@ const close = () => {
     form.clearErrors();
 };
 const submit = () => {
-    if (!modal.value || !selectedKelasData.value) return;
+    if (!modal.value || !selectedKelasData.value) {
+return;
+}
+
     form.kelas_id = String(selectedKelasData.value.id);
     form.siswa_id = String(modal.value.siswa.id);
     form.tema_id = String(modal.value.tema.id);
@@ -133,19 +136,23 @@ const approve = (rapor: RaporAkhir) =>
     );
 const reject = (rapor: RaporAkhir) => {
     const catatan = window.prompt('Catatan penolakan:');
-    if (catatan)
-        router.post(
+
+    if (catatan) {
+router.post(
             RaporAkhirController.reject(rapor.id).url,
             { catatan_penolakan: catatan },
             { preserveScroll: true },
         );
+}
 };
 const approveAll = () => {
     if (
         !selectedKelasData.value ||
         !window.confirm('Setujui semua Rapor Akhir yang menunggu validasi?')
-    )
-        return;
+    ) {
+return;
+}
+
     router.post(
         RaporAkhirController.approveAll().url,
         {
@@ -181,7 +188,9 @@ const referenceFor = () =>
                   item.absen.jadwal.tema_id === modal.value?.tema.id,
           );
 const generateDescription = () => {
-    if (!modal.value) return;
+    if (!modal.value) {
+return;
+}
 
     const referencesBySubTema = referenceFor().reduce<Map<string, Reference[]>>(
         (groups, reference) => {

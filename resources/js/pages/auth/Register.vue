@@ -1,12 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import {
-    computed,
-    ref,
-    type Component,
-    type ComponentPublicInstance,
-} from 'vue';
-import {
     CheckCircle2,
     ClipboardList,
     LockKeyhole,
@@ -14,6 +8,13 @@ import {
     ShieldCheck,
     Upload,
 } from '@lucide/vue';
+import {
+    computed,
+    ref
+    
+    
+} from 'vue';
+import type {Component, ComponentPublicInstance} from 'vue';
 
 import AppLogoIcon from '@/components/AppLogoIcon.vue';
 import InputError from '@/components/InputError.vue';
@@ -235,29 +236,45 @@ const setStepRef =
 /** Validates only the fields visible in the given step, using native HTML validity. */
 const isStepValid = (index: number) => {
     const container = stepRefs.value[index];
-    if (!container) return true;
+
+    if (!container) {
+return true;
+}
+
     const fields = container.querySelectorAll<
         HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
     >('input, select, textarea');
+
     for (const field of fields) {
         if (!field.checkValidity()) {
             field.reportValidity();
+
             return false;
         }
     }
+
     return true;
 };
 
 const nextStep = () => {
-    if (!isStepValid(currentStep.value)) return;
-    if (currentStep.value < totalSteps - 1) currentStep.value += 1;
+    if (!isStepValid(currentStep.value)) {
+return;
+}
+
+    if (currentStep.value < totalSteps - 1) {
+currentStep.value += 1;
+}
 };
 const prevStep = () => {
-    if (currentStep.value > 0) currentStep.value -= 1;
+    if (currentStep.value > 0) {
+currentStep.value -= 1;
+}
 };
 /** Only allow jumping back to a step already completed, not skipping ahead. */
 const goToStep = (index: number) => {
-    if (index < currentStep.value) currentStep.value = index;
+    if (index < currentStep.value) {
+currentStep.value = index;
+}
 };
 
 /**
@@ -267,18 +284,32 @@ const showSuccess = ref(false);
 let successTimeout: ReturnType<typeof setTimeout> | null = null;
 
 const submit = () => {
-    if (!registrationOpen.value) return;
-    if (!isStepValid(currentStep.value)) return;
+    if (!registrationOpen.value) {
+return;
+}
+
+    if (!isStepValid(currentStep.value)) {
+return;
+}
+
     form.post(existingParent.value ? '/tambah-anak' : store().url, {
         forceFormData: true,
         onSuccess: () => {
             form.reset();
             form.clearErrors();
             photoPreview.value = null;
-            if (fileInputRef.value) fileInputRef.value.value = '';
+
+            if (fileInputRef.value) {
+fileInputRef.value.value = '';
+}
+
             currentStep.value = 0;
             showSuccess.value = true;
-            if (successTimeout) clearTimeout(successTimeout);
+
+            if (successTimeout) {
+clearTimeout(successTimeout);
+}
+
             successTimeout = setTimeout(() => {
                 showSuccess.value = false;
             }, 6000);

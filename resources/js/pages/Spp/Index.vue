@@ -166,8 +166,10 @@ const sendSelectedNotifications = () => {
         !confirm(
             `Anda akan mengirim notifikasi kepada ${selectedSppIds.value.length} Orang Tua. Lanjutkan?`,
         )
-    )
-        return;
+    ) {
+return;
+}
+
     router.post(
         SppController.sendNotifications().url,
         { spp_ids: selectedSppIds.value },
@@ -184,8 +186,10 @@ const sendNotificationsByFilter = () => {
         !confirm(
             `Anda akan mengirim notifikasi kepada ${spps.value.total} Orang Tua berdasarkan filter aktif. Lanjutkan?`,
         )
-    )
-        return;
+    ) {
+return;
+}
+
     router.post(SppController.sendNotificationsByFilter().url, {
         search: search.value,
         kelas_id: kelasId.value,

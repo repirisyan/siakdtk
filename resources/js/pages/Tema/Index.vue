@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { Head, router, usePage } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
 import {
     getCoreRowModel,
-    useVueTable,
-    type ColumnDef,
+    useVueTable
+    
 } from '@tanstack/vue-table';
+import type {ColumnDef} from '@tanstack/vue-table';
+import { computed, ref } from 'vue';
 
 import TemaController from '@/actions/App/Http/Controllers/TemaController';
 
@@ -54,7 +55,9 @@ const search = ref(filters.value?.search ?? '');
 const status = ref(filters.value?.status ?? '');
 
 const visit = (url?: string | null) => {
-    if (!url) return;
+    if (!url) {
+return;
+}
 
     router.visit(url, {
         preserveState: true,
@@ -112,7 +115,9 @@ const manageSubTema = (id: number) => {
 };
 
 const deleteTema = (id: number) => {
-    if (!confirm('Hapus tema ini?')) return;
+    if (!confirm('Hapus tema ini?')) {
+return;
+}
 
     router.delete(TemaController.destroy(id).url);
 };

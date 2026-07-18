@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { Form, Head, Link, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
 import {
     CheckCircle2,
     GraduationCap,
@@ -9,6 +8,7 @@ import {
     School,
     ShieldCheck,
 } from '@lucide/vue';
+import { ref } from 'vue';
 
 import AppLogoIcon from '@/components/AppLogoIcon.vue';
 import InputError from '@/components/InputError.vue';

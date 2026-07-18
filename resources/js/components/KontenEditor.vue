@@ -14,14 +14,17 @@ const format = (command: string) => {
 const sync = () => emit('update:modelValue', editor.value?.innerHTML ?? '');
 
 onMounted(() => {
-    if (editor.value) editor.value.innerHTML = props.modelValue ?? '';
+    if (editor.value) {
+editor.value.innerHTML = props.modelValue ?? '';
+}
 });
 
 watch(
     () => props.modelValue,
     (value) => {
-        if (editor.value && editor.value.innerHTML !== value)
-            editor.value.innerHTML = value ?? '';
+        if (editor.value && editor.value.innerHTML !== value) {
+editor.value.innerHTML = value ?? '';
+}
     },
 );
 </script>

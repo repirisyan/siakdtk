@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import { computed } from 'vue';
 
 import KontenController from '@/actions/App/Http/Controllers/KontenController';
 import KontenForm from '@/components/KontenForm.vue';
 import Button from '@/components/ui/button/Button.vue';
 
-const form = useForm({
+const formState = useForm({
     jenis_konten: 'berita',
     judul: '',
     ringkasan: '',
@@ -18,8 +19,12 @@ const form = useForm({
     jam_selesai: '',
     lokasi: '',
 });
+const form = computed({
+    get: () => formState,
+    set: (value) => Object.assign(formState, value),
+});
 const submit = () =>
-    form.post(KontenController.store().url, { forceFormData: true });
+    formState.post(KontenController.store().url, { forceFormData: true });
 </script>
 
 <template>
@@ -35,10 +40,10 @@ const submit = () =>
             class="space-y-6 rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm"
             @submit.prevent="submit"
         >
-            <KontenForm :form="form" />
+            <KontenForm v-model:form="form" />
             <div class="flex gap-2">
-                <Button type="submit" :disabled="form.processing">{{
-                    form.processing ? 'Menyimpan...' : 'Simpan'
+                <Button type="submit" :disabled="formState.processing">{{
+                    formState.processing ? 'Menyimpan...' : 'Simpan'
                 }}</Button
                 ><Button as-child variant="outline"
                     ><Link :href="KontenController.index().url"
