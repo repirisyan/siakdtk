@@ -108,10 +108,10 @@
                     <dt>Nomor Telepon / HP</dt><dd>{{ $siswa->nohp_ayah ?: $siswa->nohp_ibu ?: '-' }}</dd>
                     <dt>Pekerjaan Orang Tua</dt><dd>{{ $siswa->pekerjaan ?: '-' }} / {{ $siswa->pekerjaan_ibu ?: '-' }}</dd>
                     <dt>Alamat Orang Tua / Wali</dt><dd>{{ $siswa->alamat ?: '-' }}</dd>
-                    <dt>Desa / Kelurahan Orang Tua / Wali</dt><dd>{{ $siswa->desa_wali ?: '-' }}</dd>
-                    <dt>Kecamatan Orang Tua / Wali</dt><dd>{{ $siswa->kecamatan_wali ?: '-' }}</dd>
-                    <dt>Kabupaten / Kota Orang Tua / Wali</dt><dd>{{ $siswa->kabupaten_wali ?: '-' }}</dd>
-                    <dt>Provinsi Orang Tua / Wali</dt><dd>{{ $siswa->provinsi_wali ?: '-' }}</dd>
+                    <dt>Desa / Kelurahan Orang Tua / Wali</dt><dd>{{ $siswa->desa ?: '-' }}</dd>
+                    <dt>Kecamatan Orang Tua / Wali</dt><dd>{{ $siswa->kecamatan ?: '-' }}</dd>
+                    <dt>Kabupaten / Kota Orang Tua / Wali</dt><dd>{{ $siswa->kabupaten ?: '-' }}</dd>
+                    <dt>Provinsi Orang Tua / Wali</dt><dd>{{ $siswa->provinsi ?: '-' }}</dd>
                 </dl>
                 <div class="identity-footer">
                     <div class="photo-placeholder">Pas Foto<br>3 x 4</div>

@@ -16,6 +16,7 @@ class JenisPembayaranController extends Controller
 
         return Inertia::render('JenisPembayaran/Index', [
             'jenisPembayarans' => JenisPembayaran::query()
+                ->withCount('spps')
                 ->when($search, fn ($query) => $query->where('nama_jenis', 'like', "%{$search}%"))
                 ->orderBy('nama_jenis')
                 ->paginate(10)

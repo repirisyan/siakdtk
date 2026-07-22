@@ -52,10 +52,10 @@ interface SiswaForm {
     pekerjaan_wali: string;
     penghasilan_wali: string;
     alamat_wali: string;
-    desa_wali: string;
-    kecamatan_wali: string;
-    kabupaten_wali: string;
-    provinsi_wali: string;
+    desa: string;
+    kecamatan: string;
+    kabupaten: string;
+    provinsi: string;
     kelas_id: string;
 }
 
@@ -105,6 +105,10 @@ const fields: Field[] = [
     { name: 'anak_ke', label: 'Anak Ke' },
     { name: 'jml_sdr', label: 'Jumlah Saudara' },
     { name: 'nama_pgl', label: 'Nama Panggilan' },
+    { name: 'desa', label: 'Desa / Kelurahan',required: true },
+    { name: 'kecamatan', label: 'Kecamatan',required: true },
+    { name: 'kabupaten', label: 'Kabupaten / Kota',required: true },
+    { name: 'provinsi', label: 'Provinsi',required: true },
     { name: 'alamat', label: 'Alamat', required: true },
     { name: 'nama_ayah', label: 'Nama Ayah' },
     { name: 'nohp_ayah', label: 'Nomor HP Ayah', type: 'tel' },
@@ -125,10 +129,6 @@ const fields: Field[] = [
     { name: 'pekerjaan_wali', label: 'Pekerjaan Wali' },
     { name: 'penghasilan_wali', label: 'Penghasilan Wali' },
     { name: 'alamat_wali', label: 'Alamat Wali' },
-    { name: 'desa_wali', label: 'Desa / Kelurahan Wali' },
-    { name: 'kecamatan_wali', label: 'Kecamatan Wali' },
-    { name: 'kabupaten_wali', label: 'Kabupaten / Kota Wali' },
-    { name: 'provinsi_wali', label: 'Provinsi Wali' },
 ];
 
 interface TahunAjaran {
@@ -190,10 +190,10 @@ const form = useForm<SiswaForm>({
     pekerjaan_wali: '',
     penghasilan_wali: '',
     alamat_wali: '',
-    desa_wali: '',
-    kecamatan_wali: '',
-    kabupaten_wali: '',
-    provinsi_wali: '',
+    desa: '',
+    kecamatan: '',
+    kabupaten: '',
+    provinsi: '',
     kelas_id: '',
 });
 

@@ -27,9 +27,12 @@ class PenilaianRequest extends FormRequest
             'kelas_id' => ['required', 'integer', 'exists:kelas,id'],
             'jadwal_id' => ['required', 'integer', 'exists:jadwals,id'],
             'absen_id' => ['required', 'integer', 'exists:absens,id'],
+            'sub_tema_id' => ['required', 'integer', 'exists:sub_temas,id'],
             'komponen_penilaian_id' => ['required', 'integer', 'exists:komponen_penilaians,id'],
             'nilai' => ['required', 'string', 'max:5'],
             'keterangan' => ['nullable', 'string'],
+            'foto_kegiatan' => ['nullable', 'array', 'max:10'],
+            'foto_kegiatan.*' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ];
     }
 }

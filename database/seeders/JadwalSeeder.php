@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use App\Models\Guru;
 use App\Models\Jadwal;
 use App\Models\Kelas;
-use App\Models\SubTema;
 use App\Models\Tema;
 use Illuminate\Database\Seeder;
 
@@ -18,22 +17,19 @@ class JadwalSeeder extends Seeder
     {
         $tema = Tema::where('status', true)->orderBy('id')->firstOrFail();
         $gurus = Guru::query()->orderBy('id')->get();
-        $subTemas = SubTema::where('tema_id', $tema->id)->orderBy('id')->get();
-
-        Kelas::active()->orderBy('id')->get()->each(function (Kelas $kelas, int $kelasIndex) use ($tema, $gurus, $subTemas): void {
-            $subTemas->each(function (SubTema $subTema, int $subTemaIndex) use ($kelas, $kelasIndex, $tema, $gurus): void {
-                $tanggal = now()->startOfMonth()->addDays(($kelasIndex * 7) + $subTemaIndex)->toDateString();
+        Kelas::active()->orderBy('id')->get()->each(function (Kelas $kelas, int $kelasIndex) use ($tema, $gurus): void {
+            foreach (range(0, 2) as $hariKe) {
+                $tanggal = now()->startOfMonth()->addDays(($kelasIndex * 7) + $hariKe)->toDateString();
 
                 Jadwal::firstOrCreate(
-                    ['kelas_id' => $kelas->id, 'sub_tema_id' => $subTema->id, 'tanggal' => $tanggal],
+                    ['kelas_id' => $kelas->id, 'tema_id' => $tema->id, 'tanggal' => $tanggal],
                     [
-                        'guru_id' => $gurus[($kelasIndex + $subTemaIndex) % $gurus->count()]->id,
-                        'tema_id' => $tema->id,
+                        'guru_id' => $gurus[($kelasIndex + $hariKe) % $gurus->count()]->id,
                         'jam_mulai' => '08:00:00',
                         'jam_selesai' => '10:00:00',
                     ],
                 );
-            });
+            }
         });
     }
 }

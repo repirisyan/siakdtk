@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests;
 
-use App\Models\Tema;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -29,16 +28,11 @@ class JadwalRequest extends FormRequest
             'guru_id' => in_array($this->user()->role?->role_name, ['Admin', 'Staff Akademik'], true)
                 ? ['required', 'integer', 'exists:gurus,id']
                 : ['nullable', 'integer'],
-            'sub_tema_id' => [
-                'required',
-                'integer',
-                Rule::exists('sub_temas', 'id')->where(
-                    fn ($query) => $query->whereIn('tema_id', Tema::active()->select('id')),
-                ),
-            ],
+            'tema_id' => ['required', 'integer', Rule::exists('temas', 'id')->where('status', true)],
             'tanggal' => ['required', 'date'],
             'jam_mulai' => ['required', 'date_format:H:i'],
             'jam_selesai' => ['required', 'date_format:H:i', 'after:jam_mulai'],
+            'jumlah_hari' => ['nullable', 'integer', 'min:1', 'max:31'],
         ];
     }
 }

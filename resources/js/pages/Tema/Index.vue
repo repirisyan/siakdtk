@@ -1,11 +1,7 @@
 <script setup lang="ts">
 import { Head, router, usePage } from '@inertiajs/vue3';
-import {
-    getCoreRowModel,
-    useVueTable
-    
-} from '@tanstack/vue-table';
-import type {ColumnDef} from '@tanstack/vue-table';
+import { getCoreRowModel, useVueTable } from '@tanstack/vue-table';
+import type { ColumnDef } from '@tanstack/vue-table';
 import { computed, ref } from 'vue';
 
 import TemaController from '@/actions/App/Http/Controllers/TemaController';
@@ -20,6 +16,9 @@ interface Tema {
     created_at: string;
     status: boolean;
     sub_temas_count: number;
+    jadwal_count: number;
+    rapor_count: number;
+    rapor_akhir_details_count: number;
 }
 
 interface PaginationLink {
@@ -56,8 +55,8 @@ const status = ref(filters.value?.status ?? '');
 
 const visit = (url?: string | null) => {
     if (!url) {
-return;
-}
+        return;
+    }
 
     router.visit(url, {
         preserveState: true,
@@ -116,8 +115,8 @@ const manageSubTema = (id: number) => {
 
 const deleteTema = (id: number) => {
     if (!confirm('Hapus tema ini?')) {
-return;
-}
+        return;
+    }
 
     router.delete(TemaController.destroy(id).url);
 };
@@ -277,6 +276,22 @@ const table = useVueTable({
 
                                 <Button
                                     variant="destructive"
+                                    :disabled="
+                                        row.original.sub_temas_count > 0 ||
+                                        row.original.jadwal_count > 0 ||
+                                        row.original.rapor_count > 0 ||
+                                        row.original.rapor_akhir_details_count >
+                                            0
+                                    "
+                                    :title="
+                                        row.original.sub_temas_count > 0 ||
+                                        row.original.jadwal_count > 0 ||
+                                        row.original.rapor_count > 0 ||
+                                        row.original.rapor_akhir_details_count >
+                                            0
+                                            ? 'Tema memiliki data turunan dan tidak dapat dihapus'
+                                            : 'Hapus tema'
+                                    "
                                     @click="deleteTema(row.original.id)"
                                 >
                                     Hapus

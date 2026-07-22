@@ -25,7 +25,6 @@ it('lists each student once in assessment summary', function () {
             'kelas_id' => $kelas->id,
             'guru_id' => $guru->id,
             'tema_id' => $tema->id,
-            'sub_tema_id' => $subTema->id,
             'tanggal' => "2026-07-0{$day}",
         ]);
         Absen::create([
@@ -66,7 +65,6 @@ it('shows distinct assessment components and their descriptions', function () {
             'kelas_id' => $kelas->id,
             'guru_id' => $guru->id,
             'tema_id' => $tema->id,
-            'sub_tema_id' => $subTema->id,
             'tanggal' => '2026-07-'.str_pad((string) ($index + 1), 2, '0', STR_PAD_LEFT),
         ]);
         $absen = Absen::create([

@@ -12,7 +12,6 @@ interface Jadwal {
     kelas: { nama_kelas: string; thn_ajaran: string };
     guru: { nama: string; nip: string };
     tema: { nama_tema: string };
-    subTema: { nama_sub_tema: string } | null;
 }
 defineOptions({
     layout: {
@@ -65,12 +64,6 @@ const jadwal = computed(() => page.props.jadwal as Jadwal);
                 <div>
                     <dt class="text-sm text-muted-foreground">Tema</dt>
                     <dd class="font-medium">{{ jadwal.tema.nama_tema }}</dd>
-                </div>
-                <div>
-                    <dt class="text-sm text-muted-foreground">Sub Tema</dt>
-                    <dd class="font-medium">
-                        {{ jadwal.subTema?.nama_sub_tema ?? '-' }}
-                    </dd>
                 </div>
             </dl>
             <div class="mt-6 flex gap-2">

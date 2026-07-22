@@ -22,7 +22,6 @@ interface Jadwal {
     jam_selesai: string;
     guru: { nama: string };
     tema: { nama_tema: string };
-    subTema: { nama_sub_tema: string } | null;
 }
 type StatusAbsen = 'hadir' | 'izin' | 'sakit' | 'alfa';
 interface Nilai {
@@ -31,6 +30,7 @@ interface Nilai {
     nilai: string;
     keterangan: string | null;
     komponen_penilaian: { nama_komponen: string } | null;
+    foto_kegiatans: { id: number; url: string }[];
 }
 interface KomponenPenilaian {
     id: number;
@@ -61,9 +61,11 @@ interface PenilaianForm {
     kelas_id: string;
     jadwal_id: string;
     absen_id: string;
+    sub_tema_id: string;
     komponen_penilaian_id: string;
     nilai: string;
     keterangan: string;
+    foto_kegiatan: File[];
 }
 
 const page = usePage();
@@ -96,6 +98,8 @@ const selectedTema = ref(filters.value.tema_id ?? '');
 const selectedSubTema = ref(filters.value.sub_tema_id ?? '');
 const selectedAbsen = ref<Absen | null>(null);
 const isLoading = ref(false);
+const photoInput = ref<HTMLInputElement | null>(null);
+const photoPreviews = ref<string[]>([]);
 
 watch(filters, (value) => {
     selectedKelas.value = value.kelas_id ?? '';
@@ -109,9 +113,11 @@ const nilaiForm = useForm<PenilaianForm>({
     kelas_id: selectedKelas.value,
     jadwal_id: selectedJadwal.value,
     absen_id: '',
+    sub_tema_id: '',
     komponen_penilaian_id: '',
     nilai: '',
     keterangan: '',
+    foto_kegiatan: [],
 });
 
 const loadData = () => {
@@ -124,7 +130,7 @@ const loadData = () => {
             jadwal_id: isSummary.value ? '' : selectedJadwal.value,
             summary: isSummary.value ? 1 : 0,
             tema_id: isSummary.value ? selectedTema.value : '',
-            sub_tema_id: isSummary.value ? selectedSubTema.value : '',
+            sub_tema_id: selectedSubTema.value,
         },
         {
             preserveState: true,
@@ -142,7 +148,10 @@ const changeKelas = () => {
     selectedSubTema.value = '';
     loadData();
 };
-const changeJadwal = () => loadData();
+const changeJadwal = () => {
+    selectedSubTema.value = '';
+    loadData();
+};
 const changeSummary = () => {
     selectedJadwal.value = '';
     selectedTema.value = '';
@@ -178,6 +187,7 @@ const openModal = (absen: Absen) => {
     nilaiForm.nilai = '';
     nilaiForm.keterangan = '';
     nilaiForm.komponen_penilaian_id = '';
+    clearPhotos();
 };
 watch(
     () => nilaiForm.komponen_penilaian_id,
@@ -186,6 +196,28 @@ watch(
         nilaiForm.keterangan = selectedNilai.value?.keterangan ?? '';
     },
 );
+const clearPhotos = () => {
+    photoPreviews.value.forEach((preview) => URL.revokeObjectURL(preview));
+    photoPreviews.value = [];
+    nilaiForm.foto_kegiatan = [];
+
+    if (photoInput.value) {
+        photoInput.value.value = '';
+    }
+};
+const setPhotos = (event: Event) => {
+    const input = event.target as HTMLInputElement;
+
+    photoPreviews.value.forEach((preview) => URL.revokeObjectURL(preview));
+    nilaiForm.foto_kegiatan = Array.from(input.files ?? []);
+    photoPreviews.value = nilaiForm.foto_kegiatan.map((file) =>
+        URL.createObjectURL(file),
+    );
+};
+const closeModal = () => {
+    clearPhotos();
+    selectedAbsen.value = null;
+};
 const submitNilai = () => {
     if (!selectedAbsen.value) {
         return;
@@ -194,15 +226,19 @@ const submitNilai = () => {
     nilaiForm.kelas_id = selectedKelas.value;
     nilaiForm.jadwal_id = selectedJadwal.value;
     nilaiForm.absen_id = String(selectedAbsen.value.id);
+    nilaiForm.sub_tema_id = selectedSubTema.value;
     nilaiForm.post(PenilaianController.store().url, {
         preserveScroll: true,
+        forceFormData: true,
         onSuccess: () => {
-            selectedAbsen.value = null;
+            closeModal();
             nilaiForm.reset(
                 'absen_id',
+                'sub_tema_id',
                 'komponen_penilaian_id',
                 'nilai',
                 'keterangan',
+                'foto_kegiatan',
             );
         },
     });
@@ -254,11 +290,6 @@ const table = useVueTable({
                     jadwals.find((item) => item.id === Number(selectedJadwal))
                         ?.tema.nama_tema ?? '-'
                 }}
-                · Sub Tema:
-                {{
-                    jadwals.find((item) => item.id === Number(selectedJadwal))
-                        ?.subTema?.nama_sub_tema ?? '-'
-                }}
             </p>
             <div class="grid gap-4 md:grid-cols-2">
                 <div class="space-y-2">
@@ -300,6 +331,27 @@ const table = useVueTable({
                             {{ item.tanggal }} {{ item.jam_mulai }} -
                             {{ item.jam_selesai }} | {{ item.guru.nama }} |
                             {{ item.tema.nama_tema }}
+                        </option>
+                    </select>
+                </div>
+                <div v-if="!isSummary && selectedJadwal" class="space-y-2">
+                    <label for="jadwal_sub_tema_id" class="text-sm font-medium"
+                        >Sub Tema</label
+                    >
+                    <select
+                        id="jadwal_sub_tema_id"
+                        v-model="selectedSubTema"
+                        :disabled="isLoading"
+                        class="h-9 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                        @change="loadData"
+                    >
+                        <option value="">Pilih sub tema untuk penilaian</option>
+                        <option
+                            v-for="item in subTemas"
+                            :key="item.id"
+                            :value="String(item.id)"
+                        >
+                            {{ item.nama_sub_tema }}
                         </option>
                     </select>
                 </div>
@@ -553,6 +605,7 @@ const table = useVueTable({
                             id="komponen_penilaian_id"
                             v-model="nilaiForm.komponen_penilaian_id"
                             required
+                            :disabled="!selectedSubTema"
                             class="h-9 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground"
                         >
                             <option value="">Pilih komponen</option>
@@ -594,6 +647,66 @@ const table = useVueTable({
                             placeholder="Masukkan keterangan"
                         /><InputError :message="nilaiForm.errors.keterangan" />
                     </div>
+                    <div class="space-y-2">
+                        <label for="foto_kegiatan" class="text-sm font-medium">
+                            Foto Kegiatan
+                            <span class="text-muted-foreground"
+                                >(opsional)</span
+                            >
+                        </label>
+                        <Input
+                            id="foto_kegiatan"
+                            ref="photoInput"
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            multiple
+                            @change="setPhotos"
+                        />
+                        <p class="text-xs text-muted-foreground">
+                            Maksimal 10 foto, format JPG, JPEG, PNG, atau WEBP.
+                            Maksimal 5 MB per foto.
+                        </p>
+                        <InputError :message="nilaiForm.errors.foto_kegiatan" />
+                        <InputError
+                            :message="nilaiForm.errors['foto_kegiatan.0']"
+                        />
+                        <div
+                            v-if="photoPreviews.length"
+                            class="grid grid-cols-3 gap-2 sm:grid-cols-4"
+                        >
+                            <img
+                                v-for="(preview, index) in photoPreviews"
+                                :key="preview"
+                                :src="preview"
+                                :alt="`Pratinjau foto kegiatan ${index + 1}`"
+                                class="aspect-square w-full rounded-md border border-border object-cover"
+                            />
+                        </div>
+                    </div>
+                    <div
+                        v-if="selectedNilai?.foto_kegiatans.length"
+                        class="space-y-2"
+                    >
+                        <p class="text-sm font-medium">
+                            Foto Kegiatan Tersimpan
+                        </p>
+                        <div class="grid grid-cols-3 gap-2 sm:grid-cols-4">
+                            <a
+                                v-for="foto in selectedNilai.foto_kegiatans"
+                                :key="foto.id"
+                                :href="foto.url"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="overflow-hidden rounded-md border border-border"
+                            >
+                                <img
+                                    :src="foto.url"
+                                    alt="Foto kegiatan"
+                                    class="aspect-square w-full object-cover"
+                                />
+                            </a>
+                        </div>
+                    </div>
                     <div class="flex gap-2">
                         <Button
                             type="submit"
@@ -607,7 +720,7 @@ const table = useVueTable({
                             type="button"
                             variant="outline"
                             :disabled="nilaiForm.processing"
-                            @click="selectedAbsen = null"
+                            @click="closeModal"
                             >Batal</Button
                         >
                     </div>

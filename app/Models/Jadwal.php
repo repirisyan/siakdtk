@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Jadwal extends Model
 {
@@ -27,8 +28,8 @@ class Jadwal extends Model
         return $this->belongsTo(Tema::class);
     }
 
-    public function subTema(): BelongsTo
+    public function absens(): HasMany
     {
-        return $this->belongsTo(SubTema::class);
+        return $this->hasMany(Absen::class);
     }
 }

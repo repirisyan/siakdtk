@@ -46,10 +46,10 @@ class Siswa extends Model
         'pekerjaan_wali',
         'penghasilan_wali',
         'alamat_wali',
-        'desa_wali',
-        'kecamatan_wali',
-        'kabupaten_wali',
-        'provinsi_wali',
+        'desa',
+        'kecamatan',
+        'kabupaten',
+        'provinsi',
         'akta_kelahiran_file',
         'kartu_keluarga_file',
         'kelas_id',
@@ -115,5 +115,10 @@ class Siswa extends Model
     public function rapor(): HasMany
     {
         return $this->hasMany(Rapor::class, 'siswa_id');
+    }
+
+    public function raporAkhirs(): HasMany
+    {
+        return $this->hasMany(RaporAkhir::class);
     }
 }

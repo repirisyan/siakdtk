@@ -16,7 +16,6 @@ use App\Models\SppPembayaran;
 use App\Models\User;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
@@ -46,6 +45,7 @@ class SppController extends Controller
         $totalDibayar = (float) SppPembayaran::whereIn('pembayaran_id', (clone $query)->select('id'))->where('status_verifikasi', 'approved')->sum('jumlah_bayar');
 
         $spps = $query
+            ->withCount('payments')
             ->withSum('approvedPayments as total_dibayar', 'jumlah_bayar')
             ->when(in_array($sort, $sppSorts), function ($query) use ($sort, $direction) {
                 $query->orderBy($sort, $direction);
@@ -142,17 +142,11 @@ class SppController extends Controller
     {
         $this->currentSppManager();
 
-        DB::transaction(function () use ($spp) {
-            $spp->load('payments');
+        if ($spp->payments()->exists()) {
+            return redirect()->route('spp.index')->with('error', 'Tagihan SPP sudah memiliki pembayaran dan tidak dapat dihapus.');
+        }
 
-            foreach ($spp->payments as $payment) {
-                if ($payment->bukti_pembayaran) {
-                    Storage::disk('public')->delete($payment->bukti_pembayaran);
-                }
-            }
-
-            $spp->delete();
-        });
+        $spp->delete();
 
         return redirect()
             ->route('spp.index')

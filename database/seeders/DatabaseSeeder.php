@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
             SchoolSettingSeeder::class,
             KelasSeeder::class,
             TemaSeeder::class,
+            MasterKomponenPenilaianSeeder::class,
             SubTemaSeeder::class,
             KomponenPenilaianSeeder::class,
             GuruSeeder::class,

@@ -30,7 +30,8 @@ class UserController extends Controller
             'siswa:id,user_id,nama,nis',
         ])
             ->where('role_id', '!=', '4')->where('role_id', '!=', '6')
-            ->withCount('siswas')
+            ->withCount(['siswas', 'kontens'])
+            ->withExists('guru')
             ->when($search, function ($query, $search) {
                 $query->where(function ($query) use ($search) {
                     $query
@@ -170,9 +171,9 @@ class UserController extends Controller
     public function destroy(User $user, ProfilePhotoService $profilePhotoService)
     {
         $this->authorizeAdmin();
-        $user->loadMissing(['guru'])->loadCount('siswas');
+        $user->loadMissing(['guru'])->loadCount(['siswas', 'kontens']);
 
-        if ($user->guru || $user->siswas_count > 0) {
+        if ($user->guru || $user->siswas_count > 0 || $user->kontens_count > 0) {
             return redirect()
                 ->route('users.index')
                 ->with('error', 'User masih digunakan oleh data lain.');

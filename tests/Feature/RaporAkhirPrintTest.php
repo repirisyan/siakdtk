@@ -16,10 +16,10 @@ it('renders approved final reports in the print view', function () {
     ]);
     $siswa = Siswa::factory()->create([
         'kelas_id' => $kelas->id,
-        'desa_wali' => 'Sukamaju',
-        'kecamatan_wali' => 'Cianjur',
-        'kabupaten_wali' => 'Cianjur',
-        'provinsi_wali' => 'Jawa Barat',
+        'desa' => 'Sukamaju',
+        'kecamatan' => 'Cianjur',
+        'kabupaten' => 'Cianjur',
+        'provinsi' => 'Jawa Barat',
     ]);
     $tema = Tema::factory()->create(['thn_ajaran' => $kelas->thn_ajaran]);
     $guru = Guru::factory()->create();

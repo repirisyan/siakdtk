@@ -20,6 +20,8 @@ interface User {
     guru: { nama: string; nip: string | null } | null;
     siswa: { nama: string; nis: string | null } | null;
     siswas_count: number;
+    kontens_count: number;
+    guru_exists: boolean;
 }
 
 interface PaginationLink {
@@ -298,6 +300,18 @@ const table = useVueTable({
                                 </Button>
                                 <Button
                                     variant="destructive"
+                                    :disabled="
+                                        row.original.guru_exists ||
+                                        row.original.siswas_count > 0 ||
+                                        row.original.kontens_count > 0
+                                    "
+                                    :title="
+                                        row.original.guru_exists ||
+                                        row.original.siswas_count > 0 ||
+                                        row.original.kontens_count > 0
+                                            ? 'User memiliki data profil atau konten dan tidak dapat dihapus'
+                                            : 'Hapus user'
+                                    "
                                     @click="deleteUser(row.original)"
                                 >
                                     Hapus

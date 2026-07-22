@@ -18,11 +18,6 @@ class SubTema extends Model
         return $this->belongsTo(Tema::class);
     }
 
-    public function jadwals(): HasMany
-    {
-        return $this->hasMany(Jadwal::class);
-    }
-
     public function komponenPenilaians(): HasMany
     {
         return $this->hasMany(KomponenPenilaian::class);

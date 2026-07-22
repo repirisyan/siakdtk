@@ -22,6 +22,7 @@ interface SchoolSetting {
     misi: string | null;
     tentang: string | null;
     sejarah_singkat: string | null;
+    template_deskripsi_hasil_akhir_rapor: string | null;
     tagline: string | null;
     pendaftaran_dibuka: boolean;
 }
@@ -44,6 +45,8 @@ const form = useForm({
     misi: setting.value.misi ?? '',
     tentang: setting.value.tentang ?? '',
     sejarah_singkat: setting.value.sejarah_singkat ?? '',
+    template_deskripsi_hasil_akhir_rapor:
+        setting.value.template_deskripsi_hasil_akhir_rapor ?? '',
     tagline: setting.value.tagline ?? '',
     pendaftaran_dibuka: setting.value.pendaftaran_dibuka,
 });
@@ -275,6 +278,23 @@ defineOptions({
                             v-model="form.sejarah_singkat"
                             class="min-h-32 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
                         /><InputError :message="form.errors.sejarah_singkat" />
+                    </div>
+                    <div class="space-y-2">
+                        <label
+                            for="template_deskripsi_hasil_akhir_rapor"
+                            class="text-sm font-medium"
+                            >Template Deskripsi Hasil Akhir Rapor</label
+                        >
+                        <textarea
+                            id="template_deskripsi_hasil_akhir_rapor"
+                            v-model="form.template_deskripsi_hasil_akhir_rapor"
+                            class="min-h-40 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
+                        />
+                        <InputError
+                            :message="
+                                form.errors.template_deskripsi_hasil_akhir_rapor
+                            "
+                        />
                     </div>
                 </div>
             </section>

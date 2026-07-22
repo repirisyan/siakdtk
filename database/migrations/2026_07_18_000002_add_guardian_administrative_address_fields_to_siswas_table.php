@@ -9,10 +9,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('siswas', function (Blueprint $table) {
-            $table->string('desa_wali')->nullable()->after('alamat_wali');
-            $table->string('kecamatan_wali')->nullable()->after('desa_wali');
-            $table->string('kabupaten_wali')->nullable()->after('kecamatan_wali');
-            $table->string('provinsi_wali')->nullable()->after('kabupaten_wali');
+            $table->string('desa')->nullable()->after('alamat');
+            $table->string('kecamatan')->nullable()->after('desa');
+            $table->string('kabupaten')->nullable()->after('kecamatan');
+            $table->string('provinsi')->nullable()->after('kabupaten');
         });
     }
 
@@ -20,10 +20,10 @@ return new class extends Migration
     {
         Schema::table('siswas', function (Blueprint $table) {
             $table->dropColumn([
-                'desa_wali',
-                'kecamatan_wali',
-                'kabupaten_wali',
-                'provinsi_wali',
+                'desa',
+                'kecamatan',
+                'kabupaten',
+                'provinsi',
             ]);
         });
     }

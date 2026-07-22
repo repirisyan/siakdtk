@@ -8,6 +8,7 @@ interface KomponenPenilaian {
     nama_komponen: string;
     deskripsi: string | null;
     status: boolean;
+    nilais_count: number;
 }
 
 const page = usePage();
@@ -28,8 +29,8 @@ const components = computed(
 );
 const remove = (id: number) => {
     if (window.confirm('Hapus komponen penilaian ini?')) {
-router.delete(`/komponen-penilaian/${id}`);
-}
+        router.delete(`/komponen-penilaian/${id}`);
+    }
 };
 </script>
 
@@ -105,6 +106,12 @@ router.delete(`/komponen-penilaian/${id}`);
                                 ><Button
                                     variant="destructive"
                                     size="sm"
+                                    :disabled="component.nilais_count > 0"
+                                    :title="
+                                        component.nilais_count > 0
+                                            ? 'Komponen sudah digunakan pada nilai dan tidak dapat dihapus'
+                                            : 'Hapus komponen'
+                                    "
                                     @click="remove(component.id)"
                                     >Hapus</Button
                                 >

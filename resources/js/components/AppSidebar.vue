@@ -10,6 +10,7 @@ import {
     UserRoundCheck,
     ClipboardCheck,
     NotebookPen,
+    ListChecks,
     BadgeCheck,
     Wallet,
     UserCog,
@@ -24,6 +25,7 @@ import { index as guruIndex } from '@/actions/App/Http/Controllers/GuruControlle
 import { index as jadwalIndex } from '@/actions/App/Http/Controllers/JadwalController';
 import { index as jenisPembayaranIndex } from '@/actions/App/Http/Controllers/JenisPembayaranController';
 import { index as kelasIndex } from '@/actions/App/Http/Controllers/KelasController';
+import { index as masterKomponenPenilaianIndex } from '@/actions/App/Http/Controllers/MasterKomponenPenilaianController';
 import { index as kontenIndex } from '@/actions/App/Http/Controllers/KontenController';
 import { index as penilaianIndex } from '@/actions/App/Http/Controllers/PenilaianController';
 import { index as raporAkhirIndex } from '@/actions/App/Http/Controllers/RaporAkhirController';
@@ -86,6 +88,12 @@ const menus: SidebarMenuItem[] = [
         href: temaIndex(),
         icon: BookOpen,
         activePrefixes: ['/sub-tema', '/komponen-penilaian'],
+        roles: ['Admin', 'Staff Akademik'],
+    },
+    {
+        title: 'Master Komponen Penilaian',
+        href: masterKomponenPenilaianIndex(),
+        icon: ListChecks,
         roles: ['Admin', 'Staff Akademik'],
     },
     {

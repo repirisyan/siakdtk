@@ -23,6 +23,7 @@ interface Spp {
         nis: string | null;
         kelas: { nama_kelas: string } | null;
     };
+    payments_count: number;
 }
 
 interface PaginationLink {
@@ -167,8 +168,8 @@ const sendSelectedNotifications = () => {
             `Anda akan mengirim notifikasi kepada ${selectedSppIds.value.length} Orang Tua. Lanjutkan?`,
         )
     ) {
-return;
-}
+        return;
+    }
 
     router.post(
         SppController.sendNotifications().url,
@@ -187,8 +188,8 @@ const sendNotificationsByFilter = () => {
             `Anda akan mengirim notifikasi kepada ${spps.value.total} Orang Tua berdasarkan filter aktif. Lanjutkan?`,
         )
     ) {
-return;
-}
+        return;
+    }
 
     router.post(SppController.sendNotificationsByFilter().url, {
         search: search.value,
@@ -486,6 +487,12 @@ const table = useVueTable({
                                 ><Button
                                     v-if="canManageSpp"
                                     variant="destructive"
+                                    :disabled="row.original.payments_count > 0"
+                                    :title="
+                                        row.original.payments_count > 0
+                                            ? 'Tagihan sudah memiliki pembayaran dan tidak dapat dihapus'
+                                            : 'Hapus tagihan'
+                                    "
                                     @click="destroySpp(row.original)"
                                     >Hapus</Button
                                 >

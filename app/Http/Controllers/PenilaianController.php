@@ -13,6 +13,8 @@ use App\Models\Siswa;
 use App\Models\SubTema;
 use App\Models\Tema;
 use App\Models\User;
+use App\Services\KontenImageService;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class PenilaianController extends Controller
@@ -52,9 +54,6 @@ class PenilaianController extends Controller
 
             $subTemas = SubTema::query()
                 ->where('tema_id', $temaId)
-                ->whereHas('jadwals', fn ($query) => $query
-                    ->where('kelas_id', $kelasId)
-                    ->when($user->hasRole('Guru'), fn ($query) => $query->where('guru_id', $user->guru->id)))
                 ->orderBy('nama_sub_tema')
                 ->get(['id', 'tema_id', 'nama_sub_tema']);
         }
@@ -67,7 +66,6 @@ class PenilaianController extends Controller
                 ->whereHas('absens.jadwal', fn ($query) => $query
                     ->where('kelas_id', $kelasId)
                     ->where('tema_id', $temaId)
-                    ->where('sub_tema_id', $subTemaId)
                     ->when($user->hasRole('Guru'), fn ($query) => $query->where('guru_id', $user->guru->id)))
                 ->orderBy('nama')
                 ->get(['id', 'nama', 'nis']);
@@ -79,10 +77,18 @@ class PenilaianController extends Controller
             abort_unless($jadwal->kelas_id === (int) $kelasId, 403);
 
             $absens = $this->getSiswa($user, (int) $kelasId, $jadwal->id);
-            $komponenPenilaians = KomponenPenilaian::active()
-                ->where('sub_tema_id', $jadwal->sub_tema_id)
-                ->orderBy('nama_komponen')
-                ->get(['id', 'sub_tema_id', 'nama_komponen', 'deskripsi']);
+            $subTemas = SubTema::query()
+                ->where('tema_id', $jadwal->tema_id)
+                ->orderBy('nama_sub_tema')
+                ->get(['id', 'tema_id', 'nama_sub_tema']);
+
+            if ($subTemaId) {
+                abort_unless($subTemas->contains('id', (int) $subTemaId), 403);
+                $komponenPenilaians = KomponenPenilaian::active()
+                    ->where('sub_tema_id', $subTemaId)
+                    ->orderBy('nama_komponen')
+                    ->get(['id', 'sub_tema_id', 'nama_komponen', 'deskripsi']);
+            }
             $lockedSiswaIds = $this->lockedSiswaIds($jadwal);
         }
 
@@ -123,7 +129,6 @@ class PenilaianController extends Controller
         $jadwalIds = Jadwal::query()
             ->where('kelas_id', $kelasId)
             ->where('tema_id', $temaId)
-            ->where('sub_tema_id', $subTemaId)
             ->when($user->hasRole('Guru'), fn ($query) => $query->where('guru_id', $user->guru->id))
             ->pluck('id');
 
@@ -132,6 +137,7 @@ class PenilaianController extends Controller
             ->whereHas('absen', fn ($query) => $query
                 ->where('siswa_id', $siswa->id)
                 ->whereIn('jadwal_id', $jadwalIds))
+            ->whereHas('komponenPenilaian', fn ($query) => $query->where('sub_tema_id', $subTemaId))
             ->orderBy('komponen_penilaian_id')
             ->get(['id', 'absen_id', 'komponen_penilaian_id', 'keterangan']);
 
@@ -160,14 +166,14 @@ class PenilaianController extends Controller
 
     public function getJadwal(User $user, int $kelasId)
     {
-        return Jadwal::with(['guru:id,nama,nip', 'tema:id,nama_tema', 'subTema:id,tema_id,nama_sub_tema'])
+        return Jadwal::with(['guru:id,nama,nip', 'tema:id,nama_tema'])
             ->where('kelas_id', $kelasId)
             ->when($user->hasRole('Guru'), function ($query) use ($user) {
                 $query->where('guru_id', $user->guru->id);
             })
             ->orderBy('tanggal')
             ->orderBy('jam_mulai')
-            ->get(['id', 'kelas_id', 'guru_id', 'tema_id', 'sub_tema_id', 'tanggal', 'jam_mulai', 'jam_selesai']);
+            ->get(['id', 'kelas_id', 'guru_id', 'tema_id', 'tanggal', 'jam_mulai', 'jam_selesai']);
     }
 
     public function getSiswa(User $user, int $kelasId, int $jadwalId)
@@ -180,13 +186,14 @@ class PenilaianController extends Controller
             'siswa:id,nama,nis,kelas_id',
             'nilais:id,absen_id,komponen_penilaian_id,nilai,keterangan',
             'nilais.komponenPenilaian:id,nama_komponen',
+            'nilais.fotoKegiatans:id,nilai_id,path',
         ])
             ->where('jadwal_id', $jadwalId)
             ->orderBy('id')
             ->get();
     }
 
-    public function store(PenilaianRequest $request)
+    public function store(PenilaianRequest $request, KontenImageService $imageService)
     {
         $data = $request->validated();
         $user = $this->currentAssessmentUser();
@@ -205,20 +212,37 @@ class PenilaianController extends Controller
         $this->ensureAcademicDataIsUnlocked($absen->siswa, $jadwal);
 
         abort_unless(
-            KomponenPenilaian::active()
-                ->whereKey($data['komponen_penilaian_id'])
-                ->where('sub_tema_id', $jadwal->sub_tema_id)
+            SubTema::whereKey($data['sub_tema_id'])
+                ->where('tema_id', $jadwal->tema_id)
                 ->exists(),
             403,
         );
 
-        $nilai = Nilai::updateOrCreate(
-            ['absen_id' => $absen->id, 'komponen_penilaian_id' => $data['komponen_penilaian_id']],
-            [
-                'nilai' => $data['nilai'],
-                'keterangan' => $data['keterangan'],
-            ],
+        abort_unless(
+            KomponenPenilaian::active()
+                ->whereKey($data['komponen_penilaian_id'])
+                ->where('sub_tema_id', $data['sub_tema_id'])
+                ->exists(),
+            403,
         );
+
+        $nilai = DB::transaction(function () use ($absen, $data, $request, $imageService): Nilai {
+            $nilai = Nilai::updateOrCreate(
+                ['absen_id' => $absen->id, 'komponen_penilaian_id' => $data['komponen_penilaian_id']],
+                [
+                    'nilai' => $data['nilai'],
+                    'keterangan' => $data['keterangan'],
+                ],
+            );
+
+            foreach ($request->file('foto_kegiatan', []) as $fotoKegiatan) {
+                $nilai->fotoKegiatans()->create([
+                    'path' => $imageService->store($fotoKegiatan, 'penilaian/kegiatan'),
+                ]);
+            }
+
+            return $nilai;
+        });
 
         $message = $nilai->wasRecentlyCreated
             ? 'Nilai berhasil disimpan.'
@@ -247,7 +271,7 @@ class PenilaianController extends Controller
 
     private function authorizeJadwal(User $user, int $jadwalId): Jadwal
     {
-        $jadwal = Jadwal::with(['guru:id,nama,nip', 'kelas:id,nama_kelas,thn_ajaran', 'tema:id,nama_tema', 'subTema:id,tema_id,nama_sub_tema'])
+        $jadwal = Jadwal::with(['guru:id,nama,nip', 'kelas:id,nama_kelas,thn_ajaran', 'tema:id,nama_tema'])
             ->findOrFail($jadwalId);
 
         if ($user->hasRole('Guru')) {

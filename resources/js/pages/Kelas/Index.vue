@@ -18,6 +18,8 @@ interface Kelas {
     semester: number;
     created_at: string;
     siswa_count: number;
+    jadwal_count: number;
+    rapor_akhirs_count: number;
     status: boolean;
 }
 
@@ -315,6 +317,18 @@ const table = useVueTable({
                                 >
                                 <Button
                                     variant="destructive"
+                                    :disabled="
+                                        row.original.siswa_count > 0 ||
+                                        row.original.jadwal_count > 0 ||
+                                        row.original.rapor_akhirs_count > 0
+                                    "
+                                    :title="
+                                        row.original.siswa_count > 0 ||
+                                        row.original.jadwal_count > 0 ||
+                                        row.original.rapor_akhirs_count > 0
+                                            ? 'Kelas memiliki data turunan dan tidak dapat dihapus'
+                                            : 'Hapus kelas'
+                                    "
                                     @click="deleteKelas(row.original.id)"
                                     >Hapus</Button
                                 >

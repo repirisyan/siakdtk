@@ -63,10 +63,10 @@ interface RegistrationForm {
     pekerjaan_wali: string;
     penghasilan_wali: string;
     alamat_wali: string;
-    desa_wali: string;
-    kecamatan_wali: string;
-    kabupaten_wali: string;
-    provinsi_wali: string;
+    desa: string;
+    kecamatan: string;
+    kabupaten: string;
+    provinsi: string;
 }
 type RegistrationField = Exclude<
     keyof RegistrationForm,
@@ -131,10 +131,10 @@ const guardianFields: Field[] = [
     { name: 'agama_wali', label: 'Agama Wali', options: AGAMA_OPTIONS },
     { name: 'pekerjaan_wali', label: 'Pekerjaan Wali' },
     { name: 'penghasilan_wali', label: 'Penghasilan Wali' },
-    { name: 'desa_wali', label: 'Desa / Kelurahan Wali' },
-    { name: 'kecamatan_wali', label: 'Kecamatan Wali' },
-    { name: 'kabupaten_wali', label: 'Kabupaten / Kota Wali' },
-    { name: 'provinsi_wali', label: 'Provinsi Wali' },
+    { name: 'desa', label: 'Desa / Kelurahan' },
+    { name: 'kecamatan', label: 'Kecamatan' },
+    { name: 'kabupaten', label: 'Kabupaten / Kota' },
+    { name: 'provinsi', label: 'Provinsi' },
 ];
 const registrationSteps: { label: string; icon: Component }[] = [
     { label: 'Data Akun', icon: LockKeyhole },
@@ -198,10 +198,10 @@ const form = useForm<RegistrationForm>({
     pekerjaan_wali: '',
     penghasilan_wali: '',
     alamat_wali: '',
-    desa_wali: '',
-    kecamatan_wali: '',
-    kabupaten_wali: '',
-    provinsi_wali: '',
+    desa: '',
+    kecamatan: '',
+    kabupaten: '',
+    provinsi: '',
 });
 const photoPreview = ref<string | null>(null);
 const fileInputRef = ref<HTMLInputElement | null>(null);

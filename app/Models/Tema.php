@@ -43,4 +43,9 @@ class Tema extends Model
     {
         return $this->hasManyThrough(KomponenPenilaian::class, SubTema::class);
     }
+
+    public function raporAkhirDetails(): HasMany
+    {
+        return $this->hasMany(RaporAkhirDetail::class);
+    }
 }

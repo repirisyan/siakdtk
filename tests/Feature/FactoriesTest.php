@@ -8,8 +8,10 @@ use App\Models\Kelas;
 use App\Models\KomponenPenilaian;
 use App\Models\Konten;
 use App\Models\KontenGaleri;
+use App\Models\MasterKomponenPenilaian;
 use App\Models\MidtransTransaction;
 use App\Models\Nilai;
+use App\Models\NilaiFotoKegiatan;
 use App\Models\Rapor;
 use App\Models\RaporAkhir;
 use App\Models\RaporAkhirDetail;
@@ -34,8 +36,10 @@ it('creates valid records from every application factory', function () {
         Konten::class,
         KontenGaleri::class,
         KomponenPenilaian::class,
+        MasterKomponenPenilaian::class,
         Absen::class,
         Nilai::class,
+        NilaiFotoKegiatan::class,
         Rapor::class,
         RaporAkhir::class,
         RaporAkhirDetail::class,

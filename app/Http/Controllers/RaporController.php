@@ -56,8 +56,8 @@ class RaporController extends Controller
                 : null,
             'temas' => $selectedKelas
                 ? Tema::where('thn_ajaran', $selectedKelas->thn_ajaran)
-                    ->whereHas('subTemas.jadwals', fn ($query) => $query->where('kelas_id', $selectedKelas->id))
-                    ->with(['subTemas' => fn ($query) => $query->whereHas('jadwals', fn ($jadwal) => $jadwal->where('kelas_id', $selectedKelas->id))->orderBy('nama_sub_tema')])
+                    ->whereHas('jadwal', fn ($query) => $query->where('kelas_id', $selectedKelas->id))
+                    ->with(['subTemas' => fn ($query) => $query->orderBy('nama_sub_tema')])
                     ->orderBy('nama_tema')
                     ->get(['id', 'nama_tema', 'thn_ajaran'])
                 : collect(),
@@ -77,7 +77,7 @@ class RaporController extends Controller
         $kelas = $this->authorizeKelas($user, (int) $data['kelas_id']);
 
         abort_unless($kelas->status && Tema::active()->whereKey($data['tema_id'])->exists(), 403);
-        abort_unless(SubTema::whereKey($data['sub_tema_id'])->where('tema_id', $data['tema_id'])->whereHas('jadwals', fn ($query) => $query->where('kelas_id', $kelas->id))->exists(), 403);
+        abort_unless(SubTema::whereKey($data['sub_tema_id'])->where('tema_id', $data['tema_id'])->exists(), 403);
 
         $this->authorizeStudent((int) $data['siswa_id'], $kelas->id);
         abort_unless((int) $data['thn_ajaran'] === (int) $kelas->thn_ajaran, 403);

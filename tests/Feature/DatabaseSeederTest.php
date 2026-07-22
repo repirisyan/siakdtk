@@ -6,6 +6,7 @@ use App\Models\JenisPembayaran;
 use App\Models\Kelas;
 use App\Models\KomponenPenilaian;
 use App\Models\Konten;
+use App\Models\MasterKomponenPenilaian;
 use App\Models\Nilai;
 use App\Models\RaporAkhir;
 use App\Models\Siswa;
@@ -20,6 +21,7 @@ it('seeds a complete and connected demo dataset for application menus', function
     expect(Kelas::active()->count())->toBeGreaterThan(0)
         ->and(Tema::where('status', true)->count())->toBeGreaterThan(0)
         ->and(SubTema::count())->toBeGreaterThan(0)
+        ->and(MasterKomponenPenilaian::active()->count())->toBeGreaterThan(0)
         ->and(KomponenPenilaian::where('status', true)->count())->toBeGreaterThan(0)
         ->and(Siswa::where('status', 'aktif')->count())->toBeGreaterThan(0)
         ->and(Jadwal::count())->toBeGreaterThan(0)
@@ -30,8 +32,8 @@ it('seeds a complete and connected demo dataset for application menus', function
         ->and(Spp::count())->toBeGreaterThan(0)
         ->and(Konten::where('status', 'published')->count())->toBeGreaterThan(0);
 
-    $jadwal = Jadwal::with('subTema')->firstOrFail();
-    expect($jadwal->tema_id)->toBe($jadwal->subTema->tema_id);
+    $jadwal = Jadwal::with('tema')->firstOrFail();
+    expect($jadwal->tema)->not->toBeNull();
 
     $absen = Absen::with(['siswa', 'jadwal'])->firstOrFail();
     expect($absen->siswa->kelas_id)->toBe($absen->jadwal->kelas_id);

@@ -19,7 +19,7 @@ class TemaController extends Controller
         $direction = request()->query('direction', 'desc');
         $status = request()->query('status');
 
-        $temas = Tema::query()->withCount('subTemas')
+        $temas = Tema::query()->withCount(['subTemas', 'jadwal', 'rapor', 'raporAkhirDetails'])
             ->when($search, function ($query, $search) {
                 $query->where('nama_tema', 'like', "%{$search}%");
             })
@@ -90,7 +90,7 @@ class TemaController extends Controller
      */
     public function destroy(Tema $tema)
     {
-        if ($tema->jadwal()->exists() || $tema->rapor()->exists()) {
+        if ($tema->subTemas()->exists() || $tema->jadwal()->exists() || $tema->rapor()->exists() || $tema->raporAkhirDetails()->exists()) {
             return redirect()->route('tema.index')->with('error', 'Tema sudah digunakan. Nonaktifkan tema untuk menjaga data historis.');
         }
 

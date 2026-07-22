@@ -23,6 +23,11 @@ class Guru extends Model
         return $this->hasMany(Rapor::class, 'guru_id');
     }
 
+    public function raporAkhirDetails(): HasMany
+    {
+        return $this->hasMany(RaporAkhirDetail::class);
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

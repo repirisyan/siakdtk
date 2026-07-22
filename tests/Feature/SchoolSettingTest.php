@@ -22,6 +22,7 @@ test('an administrator can update the school administrative address', function (
             'misi' => $setting->misi,
             'tentang' => $setting->tentang,
             'sejarah_singkat' => $setting->sejarah_singkat,
+            'template_deskripsi_hasil_akhir_rapor' => '{{ nama_siswa }} menunjukkan perkembangan pada {{ tema }}.',
             'tagline' => $setting->tagline,
             'pendaftaran_dibuka' => true,
         ])
@@ -34,5 +35,6 @@ test('an administrator can update the school administrative address', function (
         'kecamatan' => 'Cianjur',
         'kabupaten' => 'Cianjur',
         'provinsi' => 'Jawa Barat',
+        'template_deskripsi_hasil_akhir_rapor' => '{{ nama_siswa }} menunjukkan perkembangan pada {{ tema }}.',
     ]);
 });

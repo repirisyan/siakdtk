@@ -18,6 +18,9 @@ interface Guru {
     pendidikan: string | null;
     stts_kepegawaian: string | null;
     created_at: string;
+    jadwal_count: number;
+    rapor_count: number;
+    rapor_akhir_details_count: number;
     user: { name: string; email: string; status: boolean } | null;
 }
 interface PaginationLink {
@@ -252,6 +255,20 @@ const table = useVueTable({
                                     }}</Button
                                 ><Button
                                     variant="destructive"
+                                    :disabled="
+                                        row.original.jadwal_count > 0 ||
+                                        row.original.rapor_count > 0 ||
+                                        row.original.rapor_akhir_details_count >
+                                            0
+                                    "
+                                    :title="
+                                        row.original.jadwal_count > 0 ||
+                                        row.original.rapor_count > 0 ||
+                                        row.original.rapor_akhir_details_count >
+                                            0
+                                            ? 'Guru memiliki data turunan dan tidak dapat dihapus'
+                                            : 'Hapus guru'
+                                    "
                                     @click="deleteGuru(row.original.id)"
                                     >Hapus</Button
                                 >

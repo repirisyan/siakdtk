@@ -12,13 +12,14 @@ const items = computed(
                 nama_jenis: string;
                 deskripsi: string | null;
                 status: boolean;
+                spps_count: number;
             }[];
         },
 );
 const remove = (id: number) => {
     if (window.confirm('Hapus jenis pembayaran ini?')) {
-router.delete(`/jenis-pembayaran/${id}`);
-}
+        router.delete(`/jenis-pembayaran/${id}`);
+    }
 };
 </script>
 <template>
@@ -88,6 +89,12 @@ router.delete(`/jenis-pembayaran/${id}`);
                                 ><Button
                                     size="sm"
                                     variant="destructive"
+                                    :disabled="item.spps_count > 0"
+                                    :title="
+                                        item.spps_count > 0
+                                            ? 'Jenis pembayaran sudah digunakan dan tidak dapat dihapus'
+                                            : 'Hapus jenis pembayaran'
+                                    "
                                     @click="remove(item.id)"
                                     >Hapus</Button
                                 >

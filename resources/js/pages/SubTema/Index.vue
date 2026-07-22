@@ -11,6 +11,7 @@ const subTemas = computed(
                 id: number;
                 nama_sub_tema: string;
                 deskripsi: string | null;
+                komponen_penilaians_count: number;
                 tema: { nama_tema: string; thn_ajaran: string };
             }[];
             links: { url: string | null; label: string; active: boolean }[];
@@ -24,8 +25,8 @@ const filters = computed(
 );
 const remove = (id: number) => {
     if (confirm('Hapus sub tema ini?')) {
-router.delete(`/sub-tema/${id}`);
-}
+        router.delete(`/sub-tema/${id}`);
+    }
 };
 </script>
 <template>
@@ -102,6 +103,14 @@ router.delete(`/sub-tema/${id}`);
                                     >Tambah Komponen Penilaian</Button
                                 ><Button
                                     variant="destructive"
+                                    :disabled="
+                                        subTema.komponen_penilaians_count > 0
+                                    "
+                                    :title="
+                                        subTema.komponen_penilaians_count > 0
+                                            ? 'Sub tema memiliki komponen penilaian dan tidak dapat dihapus'
+                                            : 'Hapus sub tema'
+                                    "
                                     @click="remove(subTema.id)"
                                     >Hapus</Button
                                 >

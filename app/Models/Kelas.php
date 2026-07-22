@@ -35,4 +35,9 @@ class Kelas extends Model
     {
         return $this->hasMany(Jadwal::class);
     }
+
+    public function raporAkhirs(): HasMany
+    {
+        return $this->hasMany(RaporAkhir::class);
+    }
 }

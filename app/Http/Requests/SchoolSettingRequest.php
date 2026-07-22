@@ -31,6 +31,7 @@ class SchoolSettingRequest extends FormRequest
             'misi' => ['nullable', 'string', 'max:5000'],
             'tentang' => ['nullable', 'string', 'max:5000'],
             'sejarah_singkat' => ['nullable', 'string', 'max:5000'],
+            'template_deskripsi_hasil_akhir_rapor' => ['nullable', 'string', 'max:5000'],
             'tagline' => ['nullable', 'string', 'max:255'],
             'pendaftaran_dibuka' => ['required', 'boolean'],
         ];

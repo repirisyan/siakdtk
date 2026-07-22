@@ -32,6 +32,10 @@ interface Siswa {
     approved_at: string | null;
     approver: { name: string } | null;
     created_at: string;
+    absens_count: number;
+    spps_count: number;
+    rapor_count: number;
+    rapor_akhirs_count: number;
 }
 
 interface PaginationLink {
@@ -77,6 +81,11 @@ const approvalForm = useForm({
     kelas_id: '',
 });
 const approvalAction = ref<'approve' | 'reject' | null>(null);
+const showImportModal = ref(false);
+const importFileKey = ref(0);
+const importForm = useForm({
+    file: null as File | null,
+});
 
 /** True when the selected student has no class yet (first assignment, not a "move"). */
 const isAssigningClass = computed(() => !selectedSiswa.value?.kelas);
@@ -148,6 +157,47 @@ const changeSort = (column: string) => {
 
 const createSiswa = () => {
     router.visit(SiswaController.create().url);
+};
+
+const exportSiswas = () => {
+    window.location.assign(
+        SiswaController.exportData({
+            query: {
+                search: search.value,
+                status: status.value,
+            },
+        }).url,
+    );
+};
+
+const downloadImportTemplate = () => {
+    window.location.assign(SiswaController.downloadImportTemplate().url);
+};
+
+const openImport = () => {
+    importForm.reset();
+    importForm.clearErrors();
+    showImportModal.value = true;
+};
+
+const closeImport = () => {
+    showImportModal.value = false;
+    importForm.reset();
+    importForm.clearErrors();
+
+    importFileKey.value += 1;
+};
+
+const onImportFileChange = (event: Event) => {
+    importForm.file = (event.target as HTMLInputElement).files?.[0] ?? null;
+};
+
+const submitImport = () => {
+    importForm.post(SiswaController.importData().url, {
+        forceFormData: true,
+        preserveScroll: true,
+        onSuccess: closeImport,
+    });
 };
 
 const editSiswa = (id: number) => {
@@ -275,10 +325,18 @@ const table = useVueTable({
     <Head title="Siswa" />
 
     <div class="space-y-4 bg-background p-4 text-foreground">
-        <div class="flex items-center justify-between">
+        <div class="flex flex-wrap items-center justify-between gap-3">
             <h1 class="text-2xl font-bold">Daftar Siswa</h1>
 
-            <Button @click="createSiswa">Tambah Siswa</Button>
+            <div class="flex flex-wrap gap-2">
+                <Button variant="outline" @click="exportSiswas"
+                    >Export CSV</Button
+                >
+                <Button variant="outline" @click="openImport"
+                    >Import CSV</Button
+                >
+                <Button @click="createSiswa">Tambah Siswa</Button>
+            </div>
         </div>
 
         <div class="flex flex-wrap gap-2">
@@ -299,6 +357,81 @@ const table = useVueTable({
                 <option value="aktif">Aktif</option>
                 <option value="ditolak">Ditolak</option>
             </select>
+        </div>
+
+        <div
+            v-if="showImportModal"
+            class="fixed inset-0 z-[70] flex items-center justify-center bg-muted/80 p-4"
+        >
+            <div
+                class="w-full max-w-lg rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm"
+            >
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <h2 class="text-lg font-semibold">Import Data Siswa</h2>
+                        <p class="mt-1 text-sm text-muted-foreground">
+                            Unggah CSV berdasarkan template untuk membuat akun
+                            Orangtua Siswa dan data siswa sekaligus.
+                        </p>
+                    </div>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        @click="downloadImportTemplate"
+                        >Unduh Template</Button
+                    >
+                </div>
+
+                <div
+                    class="mt-5 rounded-lg bg-muted p-4 text-sm text-muted-foreground"
+                >
+                    <p>
+                        Kolom <code>kelas_id</code> harus menggunakan ID kelas
+                        aktif. Password wajib diisi pada file import dan tidak
+                        akan tersedia pada file export.
+                    </p>
+                </div>
+
+                <form class="mt-5 space-y-4" @submit.prevent="submitImport">
+                    <div class="space-y-2">
+                        <label
+                            for="siswa_import_file"
+                            class="text-sm font-medium"
+                            >File CSV</label
+                        >
+                        <Input
+                            id="siswa_import_file"
+                            :key="importFileKey"
+                            type="file"
+                            accept=".csv,text/csv,text/plain"
+                            @change="onImportFileChange"
+                        />
+                        <InputError :message="importForm.errors.file" />
+                    </div>
+
+                    <div class="flex justify-end gap-2">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            :disabled="importForm.processing"
+                            @click="closeImport"
+                            >Batal</Button
+                        >
+                        <Button
+                            type="submit"
+                            :disabled="
+                                importForm.processing || !importForm.file
+                            "
+                            >{{
+                                importForm.processing
+                                    ? 'Mengimpor...'
+                                    : 'Import Data'
+                            }}</Button
+                        >
+                    </div>
+                </form>
+            </div>
         </div>
 
         <div
@@ -397,6 +530,20 @@ const table = useVueTable({
                                 </Button>
                                 <Button
                                     variant="destructive"
+                                    :disabled="
+                                        row.original.absens_count > 0 ||
+                                        row.original.spps_count > 0 ||
+                                        row.original.rapor_count > 0 ||
+                                        row.original.rapor_akhirs_count > 0
+                                    "
+                                    :title="
+                                        row.original.absens_count > 0 ||
+                                        row.original.spps_count > 0 ||
+                                        row.original.rapor_count > 0 ||
+                                        row.original.rapor_akhirs_count > 0
+                                            ? 'Siswa memiliki data akademik atau pembayaran dan tidak dapat dihapus'
+                                            : 'Hapus siswa'
+                                    "
                                     @click="deleteSiswa(row.original.id)"
                                 >
                                     Hapus

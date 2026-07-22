@@ -19,6 +19,9 @@ interface Tema {
     id: number;
     nama_tema: string;
 }
+interface SchoolSetting {
+    template_deskripsi_hasil_akhir_rapor: string | null;
+}
 interface Detail {
     tema_id: number;
     keterangan: string;
@@ -35,10 +38,13 @@ interface Reference {
     id: number;
     nilai: string;
     keterangan: string | null;
-    komponen_penilaian: { nama_komponen: string } | null;
+    komponen_penilaian: {
+        nama_komponen: string;
+        sub_tema: { nama_sub_tema: string } | null;
+    } | null;
     absen: {
         siswa: { id: number };
-        jadwal: { tema_id: number; sub_tema: { nama_sub_tema: string } | null };
+        jadwal: { tema_id: number };
     };
 }
 
@@ -50,6 +56,7 @@ const selectedKelasData = computed(
 const siswas = computed(() => page.props.siswas as Siswa[]);
 const temas = computed(() => page.props.temas as Tema[]);
 const raporAkhirs = computed(() => page.props.raporAkhirs as RaporAkhir[]);
+const schoolSetting = computed(() => page.props.schoolSetting as SchoolSetting);
 const references = computed(
     () => page.props.assessmentReferences as Reference[],
 );
@@ -110,8 +117,8 @@ const close = () => {
 };
 const submit = () => {
     if (!modal.value || !selectedKelasData.value) {
-return;
-}
+        return;
+    }
 
     form.kelas_id = String(selectedKelasData.value.id);
     form.siswa_id = String(modal.value.siswa.id);
@@ -138,20 +145,20 @@ const reject = (rapor: RaporAkhir) => {
     const catatan = window.prompt('Catatan penolakan:');
 
     if (catatan) {
-router.post(
+        router.post(
             RaporAkhirController.reject(rapor.id).url,
             { catatan_penolakan: catatan },
             { preserveScroll: true },
         );
-}
+    }
 };
 const approveAll = () => {
     if (
         !selectedKelasData.value ||
         !window.confirm('Setujui semua Rapor Akhir yang menunggu validasi?')
     ) {
-return;
-}
+        return;
+    }
 
     router.post(
         RaporAkhirController.approveAll().url,
@@ -189,13 +196,14 @@ const referenceFor = () =>
           );
 const generateDescription = () => {
     if (!modal.value) {
-return;
-}
+        return;
+    }
 
     const referencesBySubTema = referenceFor().reduce<Map<string, Reference[]>>(
         (groups, reference) => {
             const subTema =
-                reference.absen.jadwal.sub_tema?.nama_sub_tema ?? 'Sub Tema';
+                reference.komponen_penilaian?.sub_tema?.nama_sub_tema ??
+                'Sub Tema';
             groups.set(subTema, [...(groups.get(subTema) ?? []), reference]);
 
             return groups;
@@ -221,6 +229,30 @@ return;
             return `${modal.value?.siswa.nama} menunjukkan perkembangan yang baik pada Sub Tema ${subTema}. ${components}`;
         })
         .join('\n\n');
+};
+const generateFromTemplate = () => {
+    if (!modal.value || !selectedKelasData.value) {
+        return;
+    }
+
+    const template =
+        schoolSetting.value?.template_deskripsi_hasil_akhir_rapor?.trim();
+
+    if (!template) {
+        form.setError(
+            'keterangan',
+            'Template deskripsi hasil akhir rapor belum diatur pada Pengaturan Sekolah.',
+        );
+
+        return;
+    }
+
+    form.keterangan = template
+        .replaceAll('{{ nama_siswa }}', modal.value.siswa.nama)
+        .replaceAll('{{ nama_kelas }}', selectedKelasData.value.nama_kelas)
+        .replaceAll('{{ tahun_ajaran }}', selectedKelasData.value.thn_ajaran)
+        .replaceAll('{{ tema }}', modal.value.tema.nama_tema);
+    form.clearErrors('keterangan');
 };
 </script>
 
@@ -406,8 +438,8 @@ return;
                         >
                             <p class="font-medium">
                                 {{
-                                    item.absen.jadwal.sub_tema?.nama_sub_tema ??
-                                    'Sub Tema'
+                                    item.komponen_penilaian?.sub_tema
+                                        ?.nama_sub_tema ?? 'Sub Tema'
                                 }}
                                 · Nilai {{ item.nilai }}
                             </p>
@@ -434,15 +466,23 @@ return;
                         <label class="text-sm font-medium"
                             >Catatan Perkembangan Tema</label
                         >
-                        <Button
-                            v-if="canManage"
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            :disabled="!referenceFor().length"
-                            @click="generateDescription"
-                            >Generate dari Penilaian</Button
-                        >
+                        <div v-if="canManage" class="flex flex-wrap gap-2">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                :disabled="!referenceFor().length"
+                                @click="generateDescription"
+                                >Generate dari Penilaian</Button
+                            >
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                @click="generateFromTemplate"
+                                >Generate dari Template</Button
+                            >
+                        </div>
                     </div>
                     <textarea
                         v-model="form.keterangan"

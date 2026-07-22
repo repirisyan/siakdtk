@@ -28,6 +28,7 @@ interface Absen {
     id: number;
     status: StatusAbsen;
     keterangan: string | null;
+    nilais_count: number;
 }
 interface Siswa {
     id: number;
@@ -288,7 +289,15 @@ const table = useVueTable({
                                 v-else
                                 type="button"
                                 variant="outline"
-                                :disabled="absenForm.processing"
+                                :disabled="
+                                    absenForm.processing ||
+                                    statusFor(row.original)!.nilais_count > 0
+                                "
+                                :title="
+                                    statusFor(row.original)!.nilais_count > 0
+                                        ? 'Absensi sudah memiliki nilai dan tidak dapat dibatalkan'
+                                        : 'Batalkan absensi'
+                                "
                                 @click="
                                     undoAbsen(
                                         statusFor(row.original)!,

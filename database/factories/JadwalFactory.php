@@ -5,7 +5,6 @@ namespace Database\Factories;
 use App\Models\Guru;
 use App\Models\Jadwal;
 use App\Models\Kelas;
-use App\Models\SubTema;
 use App\Models\Tema;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -29,8 +28,6 @@ class JadwalFactory extends Factory
             'guru_id' => Guru::factory(),
 
             'tema_id' => Tema::factory(),
-
-            'sub_tema_id' => SubTema::factory(),
 
             'tanggal' => $this->faker->date(),
 
@@ -57,12 +54,5 @@ class JadwalFactory extends Factory
             ]),
 
         ];
-    }
-
-    public function configure(): static
-    {
-        return $this->afterCreating(function (Jadwal $jadwal): void {
-            $jadwal->update(['tema_id' => $jadwal->subTema()->value('tema_id')]);
-        });
     }
 }

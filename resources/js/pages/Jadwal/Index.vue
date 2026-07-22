@@ -18,7 +18,7 @@ interface Jadwal {
     kelas: { nama_kelas: string };
     guru: { nama: string; nip: string };
     tema: { nama_tema: string };
-    subTema: { nama_sub_tema: string } | null;
+    absens_count: number;
 }
 interface PaginationLink {
     url: string | null;
@@ -43,9 +43,14 @@ const filters = computed(
             search: string;
             sort: string;
             direction: string;
+            tanggal_mulai: string | null;
+            tanggal_selesai: string | null;
+            show_all: boolean;
         },
 );
 const search = ref(filters.value?.search ?? '');
+const tanggalMulai = ref(filters.value?.tanggal_mulai ?? '');
+const tanggalSelesai = ref(filters.value?.tanggal_selesai ?? '');
 const visit = (url?: string | null) => {
     if (!url) {
         return;
@@ -53,16 +58,33 @@ const visit = (url?: string | null) => {
 
     router.visit(url, { preserveState: true, preserveScroll: true });
 };
-const applySearch = () =>
+const applyFilters = () =>
     router.get(
         JadwalController.index().url,
         {
             search: search.value,
             sort: filters.value.sort,
             direction: filters.value.direction,
+            tanggal_mulai: tanggalMulai.value,
+            tanggal_selesai: tanggalSelesai.value,
         },
         { preserveState: true, replace: true },
     );
+const clearFilters = () => {
+    search.value = '';
+    tanggalMulai.value = '';
+    tanggalSelesai.value = '';
+
+    router.get(
+        JadwalController.index().url,
+        {
+            sort: 'id',
+            direction: 'desc',
+            show_all: true,
+        },
+        { preserveState: true, replace: true },
+    );
+};
 const changeSort = (column: string) => {
     const direction =
         filters.value.sort === column && filters.value.direction === 'asc'
@@ -71,7 +93,14 @@ const changeSort = (column: string) => {
 
     router.get(
         JadwalController.index().url,
-        { search: search.value, sort: column, direction },
+        {
+            search: search.value,
+            sort: column,
+            direction,
+            tanggal_mulai: tanggalMulai.value,
+            tanggal_selesai: tanggalSelesai.value,
+            show_all: filters.value.show_all,
+        },
         { preserveState: true, replace: true },
     );
 };
@@ -96,8 +125,7 @@ const columns: ColumnDef<Jadwal>[] = [
     },
     { accessorFn: (row) => row.guru.nama, id: 'nama_guru', header: 'Guru' },
     {
-        accessorFn: (row) =>
-            `${row.tema.nama_tema} — ${row.subTema?.nama_sub_tema ?? '-'}`,
+        accessorFn: (row) => row.tema.nama_tema,
         id: 'nama_tema',
         header: 'Tema',
     },
@@ -110,7 +138,7 @@ const tableColumns = [
     { key: 'jam_selesai', label: 'Jam Selesai' },
     { key: 'nama_kelas', label: 'Kelas' },
     { key: 'nama_guru', label: 'Guru' },
-    { key: 'nama_tema', label: 'Tema / Sub Tema' },
+    { key: 'nama_tema', label: 'Tema' },
     { key: 'created_at', label: 'Dibuat' },
 ];
 const table = useVueTable({
@@ -129,12 +157,40 @@ const table = useVueTable({
             <h1 class="text-2xl font-bold">Daftar Jadwal</h1>
             <Button @click="createJadwal">Tambah Jadwal</Button>
         </div>
-        <div class="flex gap-2">
-            <Input
-                v-model="search"
-                placeholder="Cari jadwal..."
-                @keyup.enter="applySearch"
-            /><Button @click="applySearch">Cari</Button>
+        <div
+            class="flex flex-wrap items-end gap-2 rounded-xl border border-border bg-card p-4 text-card-foreground"
+        >
+            <div class="space-y-2">
+                <label for="search" class="text-sm font-medium"
+                    >Pencarian</label
+                >
+                <Input
+                    id="search"
+                    v-model="search"
+                    placeholder="Cari jadwal..."
+                    @keyup.enter="applyFilters"
+                />
+            </div>
+            <div class="space-y-2">
+                <label for="tanggal_mulai" class="text-sm font-medium"
+                    >Tanggal Mulai</label
+                >
+                <Input id="tanggal_mulai" v-model="tanggalMulai" type="date" />
+            </div>
+            <div class="space-y-2">
+                <label for="tanggal_selesai" class="text-sm font-medium"
+                    >Tanggal Selesai</label
+                >
+                <Input
+                    id="tanggal_selesai"
+                    v-model="tanggalSelesai"
+                    type="date"
+                />
+            </div>
+            <Button @click="applyFilters">Terapkan Filter</Button>
+            <Button variant="outline" @click="clearFilters"
+                >Bersihkan Filter</Button
+            >
         </div>
         <div
             class="overflow-x-auto rounded-xl border border-border bg-card text-card-foreground"
@@ -171,8 +227,7 @@ const table = useVueTable({
                         </td>
                         <td class="px-4 py-3">{{ row.original.guru.nama }}</td>
                         <td class="px-4 py-3">
-                            {{ row.original.tema.nama_tema }} —
-                            {{ row.original.subTema?.nama_sub_tema ?? '-' }}
+                            {{ row.original.tema.nama_tema }}
                         </td>
                         <td class="px-4 py-3">
                             {{
@@ -189,6 +244,12 @@ const table = useVueTable({
                                     >Edit</Button
                                 ><Button
                                     variant="destructive"
+                                    :disabled="row.original.absens_count > 0"
+                                    :title="
+                                        row.original.absens_count > 0
+                                            ? 'Jadwal sudah memiliki absensi dan tidak dapat dihapus'
+                                            : 'Hapus jadwal'
+                                    "
                                     @click="deleteJadwal(row.original.id)"
                                     >Hapus</Button
                                 >

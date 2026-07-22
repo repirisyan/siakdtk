@@ -18,7 +18,7 @@ class KomponenPenilaianController extends Controller
 
         return Inertia::render('KomponenPenilaian/Index', [
             'subTema' => $subTema,
-            'komponenPenilaians' => KomponenPenilaian::with('subTema.tema:id,nama_tema')
+            'komponenPenilaians' => KomponenPenilaian::with('subTema.tema:id,nama_tema')->withCount('nilais')
                 ->when($subTemaId, fn ($query) => $query->where('sub_tema_id', $subTemaId))
                 ->orderBy('nama_komponen')
                 ->paginate(10)

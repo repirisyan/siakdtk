@@ -6,9 +6,11 @@ use App\Http\Requests\JadwalRequest;
 use App\Models\Guru;
 use App\Models\Jadwal;
 use App\Models\Kelas;
-use App\Models\SubTema;
 use App\Models\Tema;
 use App\Models\User;
+use Carbon\Carbon;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class JadwalController extends Controller
@@ -22,6 +24,17 @@ class JadwalController extends Controller
         $search = request()->query('search');
         $sort = request()->query('sort', 'id');
         $direction = request()->query('direction', 'desc');
+        $showAll = request()->boolean('show_all');
+        $filterData = request()->validate([
+            'tanggal_mulai' => ['nullable', 'date'],
+            'tanggal_selesai' => ['nullable', 'date', 'after_or_equal:tanggal_mulai'],
+        ]);
+        $tanggalMulai = $showAll
+            ? null
+            : Carbon::parse($filterData['tanggal_mulai'] ?? now()->startOfWeek(Carbon::MONDAY))->toDateString();
+        $tanggalSelesai = $showAll
+            ? null
+            : Carbon::parse($filterData['tanggal_selesai'] ?? now()->endOfWeek(Carbon::SUNDAY))->toDateString();
 
         $relationSorts = ['nama_kelas', 'nama_guru', 'nama_tema'];
 
@@ -29,9 +42,10 @@ class JadwalController extends Controller
             'kelas:id,nama_kelas,thn_ajaran',
             'guru:id,nama,nip',
             'tema:id,nama_tema',
-            'subTema:id,tema_id,nama_sub_tema',
-        ])
+        ])->withCount('absens')
             ->when($this->isGuru($user), fn ($query) => $query->where('guru_id', $user->guru->id))
+            ->when($tanggalMulai, fn ($query) => $query->whereDate('tanggal', '>=', $tanggalMulai))
+            ->when($tanggalSelesai, fn ($query) => $query->whereDate('tanggal', '<=', $tanggalSelesai))
             ->when($search, function ($query, $search) {
                 $query->where(function ($query) use ($search) {
                     $query
@@ -70,6 +84,9 @@ class JadwalController extends Controller
                 'search' => $search,
                 'sort' => $sort,
                 'direction' => $direction,
+                'tanggal_mulai' => $tanggalMulai,
+                'tanggal_selesai' => $tanggalSelesai,
+                'show_all' => $showAll,
             ],
         ]);
     }
@@ -88,17 +105,25 @@ class JadwalController extends Controller
     public function store(JadwalRequest $request)
     {
         $data = $request->validated();
-        $subTema = SubTema::whereKey($data['sub_tema_id'])->whereHas('tema', fn ($query) => $query->where('status', true))->firstOrFail();
+        $jumlahHari = (int) ($data['jumlah_hari'] ?? 1);
+        $jadwalData = Arr::except($data, 'jumlah_hari');
+        $guruId = $this->guruIdForCurrentUser($data);
 
-        Jadwal::create([
-            ...$data,
-            'tema_id' => $subTema->tema_id,
-            'guru_id' => $this->guruIdForCurrentUser($data),
-        ]);
+        DB::transaction(function () use ($jadwalData, $jumlahHari, $guruId): void {
+            $tanggalAwal = Carbon::parse($jadwalData['tanggal']);
+
+            foreach (range(0, $jumlahHari - 1) as $hariKe) {
+                Jadwal::create([
+                    ...$jadwalData,
+                    'guru_id' => $guruId,
+                    'tanggal' => $tanggalAwal->copy()->addDays($hariKe)->toDateString(),
+                ]);
+            }
+        });
 
         return redirect()
             ->route('jadwal.index')
-            ->with('success', 'Jadwal berhasil dibuat.');
+            ->with('success', $jumlahHari === 1 ? 'Jadwal berhasil dibuat.' : "{$jumlahHari} jadwal berhasil dibuat.");
     }
 
     /**
@@ -109,7 +134,7 @@ class JadwalController extends Controller
         $this->authorizeJadwal($jadwal);
 
         return Inertia::render('Jadwal/Show', [
-            'jadwal' => $jadwal->load(['kelas:id,nama_kelas,thn_ajaran', 'guru:id,nama,nip', 'tema:id,nama_tema', 'subTema:id,tema_id,nama_sub_tema']),
+            'jadwal' => $jadwal->load(['kelas:id,nama_kelas,thn_ajaran', 'guru:id,nama,nip', 'tema:id,nama_tema']),
         ]);
     }
 
@@ -121,7 +146,7 @@ class JadwalController extends Controller
         $this->authorizeJadwal($jadwal);
 
         return Inertia::render('Jadwal/Edit', [
-            'jadwal' => $jadwal->load(['kelas:id,nama_kelas,thn_ajaran', 'guru:id,nama,nip', 'tema:id,nama_tema', 'subTema:id,tema_id,nama_sub_tema']),
+            'jadwal' => $jadwal->load(['kelas:id,nama_kelas,thn_ajaran', 'guru:id,nama,nip', 'tema:id,nama_tema']),
             ...$this->formOptions(),
         ]);
     }
@@ -133,11 +158,9 @@ class JadwalController extends Controller
     {
         $this->authorizeJadwal($jadwal);
         $data = $request->validated();
-        $subTema = SubTema::whereKey($data['sub_tema_id'])->whereHas('tema', fn ($query) => $query->where('status', true))->firstOrFail();
 
         $jadwal->update([
-            ...$data,
-            'tema_id' => $subTema->tema_id,
+            ...Arr::except($data, 'jumlah_hari'),
             'guru_id' => $this->guruIdForCurrentUser($data),
         ]);
 
@@ -152,6 +175,11 @@ class JadwalController extends Controller
     public function destroy(Jadwal $jadwal)
     {
         $this->authorizeJadwal($jadwal);
+
+        if ($jadwal->absens()->exists()) {
+            return redirect()->route('jadwal.index')->with('error', 'Jadwal sudah memiliki data absensi dan tidak dapat dihapus.');
+        }
+
         $jadwal->delete();
 
         return redirect()
@@ -169,7 +197,7 @@ class JadwalController extends Controller
             'gurus' => $canManageSchedule
                 ? Guru::orderBy('nama')->get(['id', 'nama', 'nip'])
                 : [],
-            'subTemas' => SubTema::with('tema:id,nama_tema,thn_ajaran')->whereHas('tema', fn ($query) => $query->where('status', true))->orderBy('nama_sub_tema')->get(['id', 'tema_id', 'nama_sub_tema']),
+            'temas' => Tema::active()->orderByDesc('thn_ajaran')->orderBy('nama_tema')->get(['id', 'nama_tema', 'thn_ajaran']),
             'canSelectGuru' => $canManageSchedule,
             'currentGuru' => $canManageSchedule
                 ? null

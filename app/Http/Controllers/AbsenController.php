@@ -37,7 +37,7 @@ class AbsenController extends Controller
 
             $siswas = Siswa::with([
                 'absens' => function ($query) use ($jadwalId) {
-                    $query->where('jadwal_id', $jadwalId);
+                    $query->where('jadwal_id', $jadwalId)->withCount('nilais');
                 },
             ])
                 ->where(['kelas_id' => $jadwal->kelas_id, 'status' => 'aktif'])
@@ -104,6 +104,13 @@ class AbsenController extends Controller
             403,
         );
         $this->ensureAcademicDataIsUnlocked($absen->siswa()->firstOrFail(), $jadwal);
+
+        if ($absen->nilais()->exists()) {
+            return redirect()->route('absensi.index', [
+                'kelas_id' => $jadwal->kelas_id,
+                'jadwal_id' => $jadwal->id,
+            ])->with('error', 'Absensi sudah memiliki nilai dan tidak dapat dihapus.');
+        }
 
         $absen->delete();
 

@@ -23,7 +23,7 @@ class KelasController extends Controller
         $semester = request()->query('semester');
 
         $kelas = Kelas::query()
-            ->withCount('siswa')
+            ->withCount(['siswa', 'jadwal', 'raporAkhirs'])
             ->when($search, function ($query, $search) {
                 $query->where(function ($query) use ($search) {
                     $query
@@ -107,7 +107,7 @@ class KelasController extends Controller
      */
     public function destroy(Kelas $kelas)
     {
-        if ($kelas->siswa()->exists() || $kelas->jadwal()->exists()) {
+        if ($kelas->siswa()->exists() || $kelas->jadwal()->exists() || $kelas->raporAkhirs()->exists()) {
             return redirect()->route('kelas.index')->with('error', 'Kelas sudah digunakan. Nonaktifkan kelas untuk menjaga data historis.');
         }
 

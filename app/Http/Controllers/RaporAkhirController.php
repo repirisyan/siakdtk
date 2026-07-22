@@ -45,9 +45,9 @@ class RaporAkhirController extends Controller
                 ->whereIn('siswa_id', $siswas->pluck('id'))->get();
             $references = Nilai::with([
                 'absen.siswa:id,nama',
-                'absen.jadwal:id,tema_id,sub_tema_id',
-                'absen.jadwal.subTema:id,nama_sub_tema',
-                'komponenPenilaian:id,nama_komponen',
+                'absen.jadwal:id,tema_id',
+                'komponenPenilaian:id,sub_tema_id,nama_komponen',
+                'komponenPenilaian.subTema:id,nama_sub_tema',
             ])
                 ->whereHas('absen', fn ($query) => $query->whereIn('siswa_id', $siswas->pluck('id')))
                 ->whereHas('absen.jadwal', fn ($query) => $query->where('kelas_id', $kelasId)->whereIn('tema_id', $temas->pluck('id')))
@@ -62,6 +62,9 @@ class RaporAkhirController extends Controller
             'temas' => $temas,
             'raporAkhirs' => $raporAkhirs,
             'assessmentReferences' => $references,
+            'schoolSetting' => SchoolSetting::current()->only([
+                'template_deskripsi_hasil_akhir_rapor',
+            ]),
             'canManage' => $user->hasRole('Guru'),
             'canApprove' => $user->hasRole('Kepsek'),
             'filters' => compact('kelasId', 'tahunAjaran', 'siswaId'),
@@ -173,7 +176,7 @@ class RaporAkhirController extends Controller
     private function printRelations(): array
     {
         return [
-            'siswa:id,kelas_id,nama,nis,nisn,tmp_lahir,tgl_lahir,jk,agama,anak_ke,nama_ayah,nama_ibu,nohp_ayah,nohp_ibu,pekerjaan,pekerjaan_ibu,alamat,desa_wali,kecamatan_wali,kabupaten_wali,provinsi_wali,tinggi_bdn,berat_bdn',
+            'siswa:id,kelas_id,nama,nis,nisn,tmp_lahir,tgl_lahir,jk,agama,anak_ke,nama_ayah,nama_ibu,nohp_ayah,nohp_ibu,pekerjaan,pekerjaan_ibu,alamat,desa,kecamatan,kabupaten,provinsi,tinggi_bdn,berat_bdn',
             'kelas:id,nama_kelas,thn_ajaran,semester',
             'details.tema:id,nama_tema',
             'details.guru:id,nama,nip',

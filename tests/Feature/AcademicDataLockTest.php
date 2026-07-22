@@ -22,7 +22,6 @@ it('prevents changes to attendance and assessments after final report approval',
         'kelas_id' => $kelas->id,
         'guru_id' => $guru->id,
         'tema_id' => $tema->id,
-        'sub_tema_id' => $subTema->id,
     ]);
     $siswa = Siswa::factory()->create(['kelas_id' => $kelas->id, 'status' => 'aktif']);
     $absen = Absen::create(['siswa_id' => $siswa->id, 'jadwal_id' => $jadwal->id, 'status' => 'hadir']);
@@ -55,6 +54,7 @@ it('prevents changes to attendance and assessments after final report approval',
             'kelas_id' => $kelas->id,
             'jadwal_id' => $jadwal->id,
             'absen_id' => $absen->id,
+            'sub_tema_id' => $subTema->id,
             'komponen_penilaian_id' => $komponen->id,
             'nilai' => 'A',
             'keterangan' => 'Tidak boleh tersimpan.',

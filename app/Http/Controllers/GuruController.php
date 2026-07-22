@@ -26,7 +26,7 @@ class GuruController extends Controller
 
         $guruSorts = ['user_name', 'user_email', 'user_status'];
 
-        $gurus = Guru::with('user:id,name,email,status')
+        $gurus = Guru::with('user:id,name,email,status')->withCount(['jadwal', 'rapor', 'raporAkhirDetails'])
             ->when($search, function ($query, $search) {
                 $query->where(function ($query) use ($search) {
                     $query
@@ -172,6 +172,10 @@ class GuruController extends Controller
      */
     public function destroy(Guru $guru)
     {
+        if ($guru->jadwal()->exists() || $guru->rapor()->exists() || $guru->raporAkhirDetails()->exists()) {
+            return redirect()->route('guru.index')->with('error', 'Guru sudah digunakan pada jadwal atau rapor dan tidak dapat dihapus.');
+        }
+
         $guru->delete();
 
         return redirect()

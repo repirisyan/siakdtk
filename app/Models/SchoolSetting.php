@@ -25,6 +25,7 @@ class SchoolSetting extends Model
         'misi',
         'tentang',
         'sejarah_singkat',
+        'template_deskripsi_hasil_akhir_rapor',
         'tagline',
         'pendaftaran_dibuka',
     ];

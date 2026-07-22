@@ -11,6 +11,7 @@ use App\Http\Controllers\KomponenPenilaianController;
 use App\Http\Controllers\KontenController;
 use App\Http\Controllers\KontenGaleriController;
 use App\Http\Controllers\LandingPageController;
+use App\Http\Controllers\MasterKomponenPenilaianController;
 use App\Http\Controllers\MidtransCallbackController;
 use App\Http\Controllers\PenilaianController;
 use App\Http\Controllers\RaporAkhirController;
@@ -53,6 +54,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('komponen-penilaian', KomponenPenilaianController::class)
         ->only(['index', 'create', 'store', 'edit', 'update', 'destroy'])
         ->parameters(['komponen-penilaian' => 'komponenPenilaian']);
+    Route::resource('master-komponen-penilaian', MasterKomponenPenilaianController::class)
+        ->parameters(['master-komponen-penilaian' => 'masterKomponenPenilaian']);
     Route::patch('tema/{tema}/toggle-status', [TemaController::class, 'toggleStatus'])->name('tema.toggle-status');
     Route::resource('users', UserController::class);
     Route::patch('users/{user}/toggle-status', [UserController::class, 'toggleStatus'])
@@ -63,6 +66,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('users.verify-email');
     Route::post('users/{user}/resend-verification-email', [UserController::class, 'resendVerificationEmail'])
         ->name('users.resend-verification-email');
+    Route::get('siswa/export', [SiswaController::class, 'exportData'])->name('siswa.export');
+    Route::get('siswa/import-template', [SiswaController::class, 'downloadImportTemplate'])->name('siswa.import-template');
+    Route::post('siswa/import', [SiswaController::class, 'importData'])->name('siswa.import');
     Route::resource('siswa', SiswaController::class);
     Route::resource('spp', SppController::class);
     Route::resource('jenis-pembayaran', JenisPembayaranController::class)
