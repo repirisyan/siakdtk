@@ -33,6 +33,8 @@ class JadwalRequest extends FormRequest
             'jam_mulai' => ['required', 'date_format:H:i'],
             'jam_selesai' => ['required', 'date_format:H:i', 'after:jam_mulai'],
             'jumlah_hari' => ['nullable', 'integer', 'min:1', 'max:31'],
+            'skip_sabtu' => ['nullable', 'boolean'],
+            'skip_minggu' => ['nullable', 'boolean'],
         ];
     }
 }

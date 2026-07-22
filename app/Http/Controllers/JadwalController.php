@@ -106,24 +106,42 @@ class JadwalController extends Controller
     {
         $data = $request->validated();
         $jumlahHari = (int) ($data['jumlah_hari'] ?? 1);
-        $jadwalData = Arr::except($data, 'jumlah_hari');
+        $skipSabtu = (bool) ($data['skip_sabtu'] ?? false);
+        $skipMinggu = (bool) ($data['skip_minggu'] ?? false);
+        $jadwalData = Arr::except($data, ['jumlah_hari', 'skip_sabtu', 'skip_minggu']);
         $guruId = $this->guruIdForCurrentUser($data);
 
-        DB::transaction(function () use ($jadwalData, $jumlahHari, $guruId): void {
+        $created = DB::transaction(function () use ($jadwalData, $jumlahHari, $guruId, $skipSabtu, $skipMinggu): int {
             $tanggalAwal = Carbon::parse($jadwalData['tanggal']);
+            $created = 0;
 
             foreach (range(0, $jumlahHari - 1) as $hariKe) {
+                $tanggal = $tanggalAwal->copy()->addDays($hariKe);
+
+                if (($skipSabtu && $tanggal->isSaturday()) || ($skipMinggu && $tanggal->isSunday())) {
+                    continue;
+                }
+
                 Jadwal::create([
                     ...$jadwalData,
                     'guru_id' => $guruId,
-                    'tanggal' => $tanggalAwal->copy()->addDays($hariKe)->toDateString(),
+                    'tanggal' => $tanggal->toDateString(),
                 ]);
+                $created++;
             }
+
+            return $created;
         });
+
+        if ($created === 0) {
+            return redirect()
+                ->route('jadwal.index')
+                ->with('warning', 'Tidak ada jadwal dibuat karena seluruh tanggal pada rentang yang dipilih dilewati.');
+        }
 
         return redirect()
             ->route('jadwal.index')
-            ->with('success', $jumlahHari === 1 ? 'Jadwal berhasil dibuat.' : "{$jumlahHari} jadwal berhasil dibuat.");
+            ->with('success', $created === 1 ? 'Jadwal berhasil dibuat.' : "{$created} jadwal berhasil dibuat.");
     }
 
     /**
@@ -160,7 +178,7 @@ class JadwalController extends Controller
         $data = $request->validated();
 
         $jadwal->update([
-            ...Arr::except($data, 'jumlah_hari'),
+            ...Arr::except($data, ['jumlah_hari', 'skip_sabtu', 'skip_minggu']),
             'guru_id' => $this->guruIdForCurrentUser($data),
         ]);
 

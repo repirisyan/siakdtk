@@ -46,6 +46,8 @@ const form = useForm({
     jam_mulai: '',
     jam_selesai: '',
     jumlah_hari: 1,
+    skip_sabtu: false,
+    skip_minggu: false,
 });
 const submit = () => form.post(JadwalController.store().url);
 </script>
@@ -178,11 +180,35 @@ const submit = () => form.post(JadwalController.store().url);
                     class="h-2 w-full cursor-pointer accent-primary"
                 />
                 <p class="text-xs text-muted-foreground">
-                    Sistem membuat {{ form.jumlah_hari }} jadwal mulai dari
-                    tanggal awal. Setiap jadwal memiliki kelas, guru, tema, dan
-                    jam yang sama.
+                    Sistem memproses {{ form.jumlah_hari }} hari kalender mulai
+                    dari tanggal awal. Setiap jadwal yang dibuat memiliki kelas,
+                    guru, tema, dan jam yang sama.
                 </p>
+                <div class="flex flex-wrap gap-4 text-sm">
+                    <label
+                        class="inline-flex cursor-pointer items-center gap-2"
+                    >
+                        <input
+                            v-model="form.skip_sabtu"
+                            type="checkbox"
+                            class="size-4 rounded border-border text-primary focus:ring-ring"
+                        />
+                        Lewati hari Sabtu
+                    </label>
+                    <label
+                        class="inline-flex cursor-pointer items-center gap-2"
+                    >
+                        <input
+                            v-model="form.skip_minggu"
+                            type="checkbox"
+                            class="size-4 rounded border-border text-primary focus:ring-ring"
+                        />
+                        Lewati hari Minggu
+                    </label>
+                </div>
                 <InputError :message="form.errors.jumlah_hari" />
+                <InputError :message="form.errors.skip_sabtu" />
+                <InputError :message="form.errors.skip_minggu" />
             </div>
             <div class="flex gap-2">
                 <Button type="submit" :disabled="form.processing">{{
