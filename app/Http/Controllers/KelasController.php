@@ -6,6 +6,7 @@ use App\Http\Requests\KelasRequest;
 use App\Http\Requests\MoveStudentsRequest;
 use App\Models\Kelas;
 use App\Models\Siswa;
+use App\Models\TahunAjaran;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
@@ -57,7 +58,9 @@ class KelasController extends Controller
      */
     public function create()
     {
-        return Inertia::render('Kelas/Create');
+        return Inertia::render('Kelas/Create', [
+            'tahunAjarans' => TahunAjaran::orderByDesc('tahun_ajaran')->get(['id', 'tahun_ajaran']),
+        ]);
     }
 
     /**
@@ -65,7 +68,10 @@ class KelasController extends Controller
      */
     public function store(KelasRequest $request)
     {
-        Kelas::create($request->validated());
+        $data = $request->validated();
+        $tahunAjaran = TahunAjaran::findOrFail($data['tahun_ajaran_id']);
+
+        Kelas::create([...$data, 'thn_ajaran' => $tahunAjaran->tahun_ajaran]);
 
         return redirect()
             ->route('kelas.index')
@@ -87,6 +93,7 @@ class KelasController extends Controller
     {
         return Inertia::render('Kelas/Edit', [
             'kelas' => $kelas,
+            'tahunAjarans' => TahunAjaran::orderByDesc('tahun_ajaran')->get(['id', 'tahun_ajaran']),
         ]);
     }
 
@@ -95,7 +102,10 @@ class KelasController extends Controller
      */
     public function update(KelasRequest $request, Kelas $kelas)
     {
-        $kelas->update($request->validated());
+        $data = $request->validated();
+        $tahunAjaran = TahunAjaran::findOrFail($data['tahun_ajaran_id']);
+
+        $kelas->update([...$data, 'thn_ajaran' => $tahunAjaran->tahun_ajaran]);
 
         return redirect()
             ->route('kelas.index')

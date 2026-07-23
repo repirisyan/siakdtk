@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             RoleSeeder::class,
             UserSeeder::class,
             SchoolSettingSeeder::class,
+            TahunAjaranSeeder::class,
             KelasSeeder::class,
             TemaSeeder::class,
             MasterKomponenPenilaianSeeder::class,

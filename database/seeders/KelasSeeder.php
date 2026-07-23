@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Kelas;
+use App\Models\TahunAjaran;
 use Illuminate\Database\Seeder;
 
 class KelasSeeder extends Seeder
@@ -19,15 +20,22 @@ class KelasSeeder extends Seeder
             ['nama_kelas' => 'TK A Anggrek', 'thn_ajaran' => $tahunAjaran, 'semester' => 1, 'status' => true],
             ['nama_kelas' => 'TK B Mawar', 'thn_ajaran' => $tahunAjaran, 'semester' => 2, 'status' => true],
             ['nama_kelas' => 'TK B Kenanga', 'thn_ajaran' => $tahunAjaran - 1, 'semester' => 2, 'status' => false],
-        ])->each(fn (array $kelas) => Kelas::updateOrCreate(
-            [
-                'nama_kelas' => $kelas['nama_kelas'],
-                'thn_ajaran' => $kelas['thn_ajaran'],
-            ],
-            [
-                'semester' => $kelas['semester'],
-                'status' => $kelas['status'],
-            ],
-        ));
+        ])->each(function (array $kelas): void {
+            $tahunAjaranModel = TahunAjaran::firstOrCreate([
+                'tahun_ajaran' => $kelas['thn_ajaran'],
+            ]);
+
+            Kelas::updateOrCreate(
+                [
+                    'nama_kelas' => $kelas['nama_kelas'],
+                    'thn_ajaran' => $kelas['thn_ajaran'],
+                ],
+                [
+                    'tahun_ajaran_id' => $tahunAjaranModel->id,
+                    'semester' => $kelas['semester'],
+                    'status' => $kelas['status'],
+                ],
+            );
+        });
     }
 }

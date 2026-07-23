@@ -2,6 +2,7 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { getCoreRowModel, useVueTable } from '@tanstack/vue-table';
 import type { ColumnDef } from '@tanstack/vue-table';
+import { ChevronDown } from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
 
 import PenilaianController from '@/actions/App/Http/Controllers/PenilaianController';
@@ -29,7 +30,13 @@ interface Nilai {
     komponen_penilaian_id: number;
     nilai: string;
     keterangan: string | null;
-    komponen_penilaian: { nama_komponen: string } | null;
+    komponen_penilaian: {
+        nama_komponen: string;
+        sub_tema: {
+            nama_sub_tema: string;
+            tema: { nama_tema: string } | null;
+        } | null;
+    } | null;
     foto_kegiatans: { id: number; url: string }[];
 }
 interface KomponenPenilaian {
@@ -55,6 +62,11 @@ interface Absen {
     id: number;
     status: StatusAbsen;
     siswa: { id: number; nama: string; nis: string | null };
+    nilais: Nilai[];
+}
+interface PenilaianGroup {
+    tema: string;
+    subTema: string;
     nilais: Nilai[];
 }
 interface PenilaianForm {
@@ -100,6 +112,7 @@ const selectedAbsen = ref<Absen | null>(null);
 const isLoading = ref(false);
 const photoInput = ref<HTMLInputElement | null>(null);
 const photoPreviews = ref<string[]>([]);
+const expandedPenilaianGroups = ref<string[]>([]);
 
 watch(filters, (value) => {
     selectedKelas.value = value.kelas_id ?? '';
@@ -244,20 +257,51 @@ const submitNilai = () => {
     });
 };
 
+const penilaianGroups = (nilais: Nilai[]) => {
+    const groups = new Map<string, PenilaianGroup>();
+
+    nilais.forEach((nilai) => {
+        const subTema = nilai.komponen_penilaian?.sub_tema;
+        const tema = subTema?.tema?.nama_tema ?? 'Tema tidak tersedia';
+        const namaSubTema = subTema?.nama_sub_tema ?? 'Sub Tema tidak tersedia';
+        const key = `${tema}-${namaSubTema}`;
+        const group = groups.get(key) ?? {
+            tema,
+            subTema: namaSubTema,
+            nilais: [],
+        };
+
+        group.nilais.push(nilai);
+        groups.set(key, group);
+    });
+
+    return Array.from(groups.values());
+};
+const penilaianGroupKey = (absenId: number, group: PenilaianGroup) =>
+    `${absenId}-${group.tema}-${group.subTema}`;
+const isPenilaianGroupExpanded = (absenId: number, group: PenilaianGroup) =>
+    expandedPenilaianGroups.value.includes(penilaianGroupKey(absenId, group));
+const togglePenilaianGroup = (absenId: number, group: PenilaianGroup) => {
+    const key = penilaianGroupKey(absenId, group);
+
+    expandedPenilaianGroups.value = isPenilaianGroupExpanded(absenId, group)
+        ? expandedPenilaianGroups.value.filter((item) => item !== key)
+        : [...expandedPenilaianGroups.value, key];
+};
+
 const columns: ColumnDef<Absen>[] = [
     { accessorFn: (row) => row.siswa.nama, id: 'nama', header: 'Nama Siswa' },
     { accessorFn: (row) => row.siswa.nis, id: 'nis', header: 'NIS' },
     { accessorKey: 'status', header: 'Status Absensi' },
     {
-        accessorFn: (row) => row.nilais.map((nilai) => nilai.nilai).join(', '),
-        id: 'nilai',
-        header: 'Nilai',
-    },
-    {
         accessorFn: (row) =>
-            row.nilais.map((nilai) => nilai.keterangan).join(', '),
-        id: 'keterangan',
-        header: 'Keterangan',
+            row.nilais
+                .map((nilai) =>
+                    `${nilai.nilai} ${nilai.keterangan ?? ''}`.trim(),
+                )
+                .join(', '),
+        id: 'penilaian',
+        header: 'Hasil Penilaian',
     },
 ];
 const table = useVueTable({
@@ -434,11 +478,10 @@ const table = useVueTable({
                         <th class="px-4 py-3 text-left text-sm font-medium">
                             Status Absensi
                         </th>
-                        <th class="px-4 py-3 text-left text-sm font-medium">
-                            Nilai
-                        </th>
-                        <th class="px-4 py-3 text-left text-sm font-medium">
-                            Keterangan
+                        <th
+                            class="min-w-96 px-4 py-3 text-left text-sm font-medium"
+                        >
+                            Hasil Penilaian
                         </th>
                         <th class="px-4 py-3 text-left text-sm font-medium">
                             Aksi
@@ -451,54 +494,132 @@ const table = useVueTable({
                         :key="row.id"
                         class="border-t border-border hover:bg-muted/50"
                     >
-                        <td class="px-4 py-3">{{ index + 1 }}</td>
-                        <td class="px-4 py-3">{{ row.original.siswa.nama }}</td>
-                        <td class="px-4 py-3">
+                        <td class="px-4 py-3 align-top">{{ index + 1 }}</td>
+                        <td class="px-4 py-3 align-top">
+                            {{ row.original.siswa.nama }}
+                        </td>
+                        <td class="px-4 py-3 align-top">
                             {{ row.original.siswa.nis ?? '-' }}
                         </td>
-                        <td class="px-4 py-3">
+                        <td class="px-4 py-3 align-top">
                             <span
                                 class="rounded-md bg-muted px-2 py-1 text-sm"
                                 >{{ row.original.status }}</span
                             >
                         </td>
-                        <td class="px-4 py-3">
+                        <td class="px-4 py-3 align-top">
                             <div
                                 v-if="row.original.nilais.length"
-                                class="space-y-1"
+                                class="space-y-3"
                             >
-                                <p
-                                    v-for="nilai in row.original.nilais"
-                                    :key="nilai.id"
-                                    class="text-sm"
+                                <section
+                                    v-for="group in penilaianGroups(
+                                        row.original.nilais,
+                                    )"
+                                    :key="`${group.tema}-${group.subTema}`"
+                                    class="rounded-lg border border-border bg-muted/40 p-3"
                                 >
-                                    <span class="text-muted-foreground"
-                                        >{{
-                                            nilai.komponen_penilaian
-                                                ?.nama_komponen ?? 'Komponen'
-                                        }}:</span
+                                    <button
+                                        type="button"
+                                        class="flex w-full items-center justify-between gap-3 text-left"
+                                        :aria-expanded="
+                                            isPenilaianGroupExpanded(
+                                                row.original.id,
+                                                group,
+                                            )
+                                        "
+                                        :aria-label="`Tampilkan detail penilaian ${group.tema}, ${group.subTema}`"
+                                        @click="
+                                            togglePenilaianGroup(
+                                                row.original.id,
+                                                group,
+                                            )
+                                        "
                                     >
-                                    {{ nilai.nilai }}
-                                </p>
+                                        <span
+                                            class="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs"
+                                        >
+                                            <span
+                                                class="font-medium text-foreground"
+                                                >Tema: {{ group.tema }}</span
+                                            >
+                                            <span class="text-muted-foreground"
+                                                >•</span
+                                            >
+                                            <span class="text-muted-foreground"
+                                                >Sub Tema:
+                                                {{ group.subTema }}</span
+                                            >
+                                        </span>
+                                        <ChevronDown
+                                            class="size-4 shrink-0 text-muted-foreground transition-transform"
+                                            :class="{
+                                                'rotate-180':
+                                                    isPenilaianGroupExpanded(
+                                                        row.original.id,
+                                                        group,
+                                                    ),
+                                            }"
+                                        />
+                                    </button>
+                                    <div
+                                        v-if="
+                                            isPenilaianGroupExpanded(
+                                                row.original.id,
+                                                group,
+                                            )
+                                        "
+                                        class="space-y-3"
+                                    >
+                                        <div
+                                            v-for="nilai in group.nilais"
+                                            :key="nilai.id"
+                                            class="border-t border-border pt-3 first:border-t-0 first:pt-0"
+                                        >
+                                            <div
+                                                class="flex flex-wrap items-center justify-between gap-2"
+                                            >
+                                                <p class="text-sm font-medium">
+                                                    {{
+                                                        nilai.komponen_penilaian
+                                                            ?.nama_komponen ??
+                                                        'Komponen Penilaian'
+                                                    }}
+                                                </p>
+                                                <span
+                                                    class="rounded-md bg-primary px-2 py-1 text-xs font-semibold text-primary-foreground"
+                                                >
+                                                    Nilai {{ nilai.nilai }}
+                                                </span>
+                                            </div>
+                                            <p
+                                                class="mt-1 text-sm text-muted-foreground"
+                                            >
+                                                {{
+                                                    nilai.keterangan ??
+                                                    'Belum ada keterangan.'
+                                                }}
+                                            </p>
+                                            <p
+                                                v-if="
+                                                    nilai.foto_kegiatans.length
+                                                "
+                                                class="mt-2 text-xs text-muted-foreground"
+                                            >
+                                                {{
+                                                    nilai.foto_kegiatans.length
+                                                }}
+                                                foto kegiatan tersedia
+                                            </p>
+                                        </div>
+                                    </div>
+                                </section>
                             </div>
-                            <span v-else>-</span>
-                        </td>
-                        <td class="px-4 py-3">
-                            <div
-                                v-if="row.original.nilais.length"
-                                class="space-y-1"
+                            <span v-else class="text-sm text-muted-foreground"
+                                >Belum ada penilaian.</span
                             >
-                                <p
-                                    v-for="nilai in row.original.nilais"
-                                    :key="nilai.id"
-                                    class="max-w-xs text-sm text-muted-foreground"
-                                >
-                                    {{ nilai.keterangan ?? '-' }}
-                                </p>
-                            </div>
-                            <span v-else>-</span>
                         </td>
-                        <td class="px-4 py-3">
+                        <td class="px-4 py-3 align-top">
                             <Button
                                 v-if="canAssess(row.original)"
                                 :disabled="nilaiForm.processing"
@@ -519,7 +640,7 @@ const table = useVueTable({
                     </tr>
                     <tr v-if="!table.getRowModel().rows.length">
                         <td
-                            colspan="7"
+                            colspan="6"
                             class="py-8 text-center text-muted-foreground"
                         >
                             Belum ada data absensi pada jadwal ini

@@ -185,7 +185,9 @@ class PenilaianController extends Controller
         return Absen::with([
             'siswa:id,nama,nis,kelas_id',
             'nilais:id,absen_id,komponen_penilaian_id,nilai,keterangan',
-            'nilais.komponenPenilaian:id,nama_komponen',
+            'nilais.komponenPenilaian:id,sub_tema_id,nama_komponen',
+            'nilais.komponenPenilaian.subTema:id,tema_id,nama_sub_tema',
+            'nilais.komponenPenilaian.subTema.tema:id,nama_tema',
             'nilais.fotoKegiatans:id,nilai_id,path',
         ])
             ->where('jadwal_id', $jadwalId)

@@ -12,7 +12,12 @@ interface Kelas {
     id: number;
     nama_kelas: string;
     thn_ajaran: string;
+    tahun_ajaran_id: number | null;
     semester: number;
+}
+interface TahunAjaran {
+    id: number;
+    tahun_ajaran: string;
 }
 
 defineOptions({
@@ -26,10 +31,13 @@ defineOptions({
 
 const page = usePage();
 const kelas = computed(() => page.props.kelas as Kelas);
+const tahunAjarans = computed(() => page.props.tahunAjarans as TahunAjaran[]);
 
 const form = useForm({
     nama_kelas: kelas.value?.nama_kelas ?? '',
-    thn_ajaran: kelas.value?.thn_ajaran ?? '',
+    tahun_ajaran_id: kelas.value?.tahun_ajaran_id
+        ? String(kelas.value.tahun_ajaran_id)
+        : '',
     semester: kelas.value?.semester ? String(kelas.value.semester) : '',
 });
 
@@ -37,7 +45,9 @@ watch(
     kelas,
     (value) => {
         form.nama_kelas = value?.nama_kelas ?? '';
-        form.thn_ajaran = value?.thn_ajaran ?? '';
+        form.tahun_ajaran_id = value?.tahun_ajaran_id
+            ? String(value.tahun_ajaran_id)
+            : '';
         form.semester = value?.semester ? String(value.semester) : '';
     },
     { immediate: true },
@@ -74,17 +84,24 @@ const submit = () => {
                 </div>
 
                 <div class="space-y-2">
-                    <label for="thn_ajaran" class="text-sm font-medium"
+                    <label for="tahun_ajaran_id" class="text-sm font-medium"
                         >Tahun Ajaran</label
                     >
-                    <Input
-                        id="thn_ajaran"
-                        v-model="form.thn_ajaran"
-                        inputmode="numeric"
-                        maxlength="4"
-                        placeholder="Contoh: 2026"
-                    />
-                    <InputError :message="form.errors.thn_ajaran" />
+                    <select
+                        id="tahun_ajaran_id"
+                        v-model="form.tahun_ajaran_id"
+                        class="h-9 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground"
+                    >
+                        <option value="">Pilih tahun ajaran</option>
+                        <option
+                            v-for="item in tahunAjarans"
+                            :key="item.id"
+                            :value="String(item.id)"
+                        >
+                            {{ item.tahun_ajaran }}
+                        </option>
+                    </select>
+                    <InputError :message="form.errors.tahun_ajaran_id" />
                 </div>
 
                 <div class="space-y-2">

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 
 import KelasController from '@/actions/App/Http/Controllers/KelasController';
 
@@ -16,9 +17,16 @@ defineOptions({
     },
 });
 
+interface TahunAjaran {
+    id: number;
+    tahun_ajaran: string;
+}
+
+const page = usePage();
+const tahunAjarans = computed(() => page.props.tahunAjarans as TahunAjaran[]);
 const form = useForm({
     nama_kelas: '',
-    thn_ajaran: '',
+    tahun_ajaran_id: '',
     semester: '',
 });
 
@@ -55,17 +63,24 @@ const submit = () => {
                 </div>
 
                 <div class="space-y-2">
-                    <label for="thn_ajaran" class="text-sm font-medium"
+                    <label for="tahun_ajaran_id" class="text-sm font-medium"
                         >Tahun Ajaran</label
                     >
-                    <Input
-                        id="thn_ajaran"
-                        v-model="form.thn_ajaran"
-                        inputmode="numeric"
-                        maxlength="4"
-                        placeholder="Contoh: 2026"
-                    />
-                    <InputError :message="form.errors.thn_ajaran" />
+                    <select
+                        id="tahun_ajaran_id"
+                        v-model="form.tahun_ajaran_id"
+                        class="h-9 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground"
+                    >
+                        <option value="">Pilih tahun ajaran</option>
+                        <option
+                            v-for="item in tahunAjarans"
+                            :key="item.id"
+                            :value="String(item.id)"
+                        >
+                            {{ item.tahun_ajaran }}
+                        </option>
+                    </select>
+                    <InputError :message="form.errors.tahun_ajaran_id" />
                 </div>
 
                 <div class="space-y-2">

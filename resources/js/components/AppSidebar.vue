@@ -6,6 +6,7 @@ import {
     School,
     Newspaper,
     CalendarDays,
+    CalendarRange,
     GraduationCap,
     UserRoundCheck,
     ClipboardCheck,
@@ -36,6 +37,7 @@ import { index as siswaIndex } from '@/actions/App/Http/Controllers/SiswaControl
 import { index as sppIndex } from '@/actions/App/Http/Controllers/SppController';
 import { index as tagihanSayaIndex } from '@/actions/App/Http/Controllers/TagihanSayaController';
 import { index as temaIndex } from '@/actions/App/Http/Controllers/TemaController';
+import { index as tahunAjaranIndex } from '@/actions/App/Http/Controllers/TahunAjaranController';
 import { index as userIndex } from '@/actions/App/Http/Controllers/UserController';
 import AppLogo from '@/components/AppLogo.vue';
 import NavMain from '@/components/NavMain.vue';
@@ -100,6 +102,12 @@ const menus: SidebarMenuItem[] = [
         title: 'Kelola Data Kelas',
         href: kelasIndex(),
         icon: School,
+        roles: ['Admin', 'Staff Akademik'],
+    },
+    {
+        title: 'Tahun Ajaran',
+        href: tahunAjaranIndex(),
+        icon: CalendarRange,
         roles: ['Admin', 'Staff Akademik'],
     },
     {

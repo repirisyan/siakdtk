@@ -24,6 +24,7 @@ use App\Http\Controllers\SppPembayaranController;
 use App\Http\Controllers\StudentRegistrationController;
 use App\Http\Controllers\SubTemaController;
 use App\Http\Controllers\TagihanSayaController;
+use App\Http\Controllers\TahunAjaranController;
 use App\Http\Controllers\TemaController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -50,6 +51,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('tambah-anak', [StudentRegistrationController::class, 'createAdditional'])->name('anak.create');
     Route::post('tambah-anak', [StudentRegistrationController::class, 'storeAdditional'])->name('anak.store');
     Route::resource('tema', TemaController::class);
+    Route::resource('tahun-ajaran', TahunAjaranController::class)
+        ->parameters(['tahun-ajaran' => 'tahunAjaran']);
     Route::resource('sub-tema', SubTemaController::class);
     Route::resource('komponen-penilaian', KomponenPenilaianController::class)
         ->only(['index', 'create', 'store', 'edit', 'update', 'destroy'])
